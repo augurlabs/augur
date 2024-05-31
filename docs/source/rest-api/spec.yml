@@ -9,6 +9,950 @@ info:
   version: 0.60.0
 openapi: 3.1.0
 paths:
+
+  # platform endpoints
+  /repo-groups/:repo_group_id/committers:
+      get:
+        description: 'Number of persons opening an issue for the first time. '
+        externalDocs:
+          description: CHAOSS Metric Definition
+          url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
+        operationId: Committers (Repo Group)
+        parameters:
+        - description: Repository Group ID
+          in: path
+          name: repo_group_id
+          schema:
+            type: string
+          type: string
+        - description: Periodicity specification.
+          in: path
+          name: period
+          schema:
+            type: string
+          type: string
+        - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+          in: path
+          name: begin_date
+          schema:
+            type: string
+          type: string
+        - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+          in: path
+          name: end_date
+          schema:
+            type: string
+          type: string
+        responses:
+          '200':
+            description: OK
+            schema:
+              items:
+                properties:
+                  count:
+                    description: 'Example: 372'
+                    type: integer
+                  date:
+                    description: 'Example: 2007-01-01T00:00:00.000Z'
+                    type: string
+                  rg_name:
+                    description: 'Example: Comcast'
+                    type: string
+              type: array
+        tags:
+        - platform
+  /repos/:repo_id/committers:
+    get:
+      description: 'Number of persons contributing with an accepted commit for the
+        first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
+      operationId: Committers (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 1'
+                  type: integer
+                date:
+                  description: 'Example: 2018-10-25T00:00:00.000Z'
+                  type: string
+                repo_name:
+                  description: 'Example: weasel'
+                  type: string
+                rg_name:
+                  description: 'Example: Comcast'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/license-coverage:
+      get:
+        description: 'Number of persons opening an issue for the first time. '
+        externalDocs:
+          description: CHAOSS Metric Definition
+          url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        operationId: License Coverage (Repo Group)
+        parameters:
+        - description: Repository Group ID
+          in: path
+          name: repo_group_id
+          schema:
+            type: string
+          type: string
+        responses:
+          '200':
+            description: OK
+            schema:
+              items:
+                properties:
+                  coverage:
+                    description: 'Example: 0.373'
+                    type: string
+                  license_declared_files:
+                    description: 'Example: 19'
+                    type: integer
+                  name:
+                    description: 'Example: ActorServiceRegistry'
+                    type: string
+                  total_files:
+                    description: 'Example: 51'
+                    type: integer
+              type: array
+        tags:
+        - platform
+  /repos/:repo_id/license-coverage:
+    get:
+      description: 'Number of persons contributing with an accepted commit for the
+        first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+      operationId: License Coverage (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                coverage:
+                  description: 'Example: 0.347'
+                  type: string
+                license_declared_file:
+                  description: 'Example: 33'
+                  type: integer
+                repo_name:
+                  description: 'Example: zucchini'
+                  type: string
+                total_files:
+                  description: 'Example: 95'
+                  type: integer
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-active:
+    get:
+      description: 'Time series of number of issues that showed some activity during
+        a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
+      operationId: Issues Active (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 18'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21039'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails_xss'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-active:
+    get:
+      description: 'Time series of number of issues that showed some activity during
+        a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
+      operationId: Issues Active (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2011-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 30'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-closed:
+    get:
+      description: 'Time series of number of issues closed during a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Closed.md
+      operationId: Issues Closed (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 425'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21681'
+                  type: integer
+                repo_name:
+                  description: 'Example: incubator-zipkin'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-closed:
+    get:
+      description: 'Time series of number of issues closed during a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+      operationId: Issues Closed (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2012-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 97'
+                  type: integer
+                repo_name:
+                  description: 'Example: incubator-pagespeed-ngx'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-closed-resolution-duration:
+    get:
+      description: 'Duration of time for issues to be resolved. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
+      operationId: Closed Issue Resolution Duration (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                closed_at:
+                  description: 'Example: 2019-05-22T05:27:29.000Z'
+                  type: string
+                created_at:
+                  description: 'Example: 2019-05-22T03:18:13.000Z'
+                  type: string
+                diffdate:
+                  description: 'Example: 0.0'
+                  type: string
+                gh_issue_number:
+                  description: 'Example: 4110'
+                  type: integer
+                issue_title:
+                  description: 'Example: rm incubating word'
+                  type: string
+                repo_name:
+                  description: 'Example: incubator-dubbo'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-closed-resolution-duration:
+    get:
+      description: 'Duration of time for issues to be resolved. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
+      operationId: Closed Issue Resolution Duration (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                closed_at:
+                  description: 'Example: 2019-06-17T03:12:48.000Z'
+                  type: string
+                created_at:
+                  description: 'Example: 2019-05-31T07:55:44.000Z'
+                  type: string
+                diffdate:
+                  description: 'Example: 16.0'
+                  type: string
+                gh_issue_number:
+                  description: 'Example: 4223'
+                  type: integer
+                issue_title:
+                  description: 'Example: Cloud Native PR'
+                  type: string
+                repo_id:
+                  description: 'Example: 21682'
+                  type: integer
+                repo_name:
+                  description: 'Example: incubator-dubbo'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-first-time-closed:
+    get:
+      description: 'Number of persons closing an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
+      operationId: Closed Issues New Contributor (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 3'
+                  type: integer
+                issue_date:
+                  description: 'Example: 2018-05-20T00:00:00.000Z'
+                  type: string
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-first-time-closed:
+    get:
+      description: 'Number of persons closing an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
+      operationId: Closed Issues New Contributors (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 3'
+                  type: integer
+                issue_date:
+                  description: 'Example: 2018-05-20T00:00:00.000Z'
+                  type: string
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-first-time-opened:
+    get:
+      description: 'Number of persons opening an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-opened.md
+      operationId: New Contributors of Issues (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 3'
+                  type: integer
+                issue_date:
+                  description: 'Example: 2018-05-20T00:00:00.000Z'
+                  type: string
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-first-time-opened:
+    get:
+      description: 'Number of persons opening an issue for the first time. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-opened.md
+      operationId: New Contributors of Issues (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                count:
+                  description: 'Example: 3'
+                  type: integer
+                issue_date:
+                  description: 'Example: 2018-05-20T00:00:00.000Z'
+                  type: string
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-maintainer-response-duration:
+    get:
+      description: 'Duration of time for issues to be resolved. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
+      operationId: Issue Response Time (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                average_days_comment:
+                  description: 'Example: 27.1111111111'
+                  type: string
+                repo_id:
+                  description: 'Example: 21987'
+                  type: integer
+                repo_name:
+                  description: 'Example: qpid-proton'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-maintainer-response-duration:
+    get:
+      description: 'Duration of time for issues to be resolved. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
+      operationId: Issue Response Time (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                average_days_comment:
+                  description: 'Example: 27.1111111111'
+                  type: string
+                repo_id:
+                  description: 'Example: 21987'
+                  type: integer
+                repo_name:
+                  description: 'Example: qpid-proton'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-new:
+    get:
+      description: 'Time series of number of new issues opened during a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+      operationId: Issues New (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2019-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 318'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-new:
+    get:
+      description: 'Time series of number of new issues opened during a certain period. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+      operationId: Issues New (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: Periodicity specification.
+        in: path
+        name: period
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2015-01-01T00:00:00.000Z'
+                  type: string
+                issues:
+                  description: 'Example: 116'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repo-groups/:repo_group_id/issues-open-age:
+    get:
+      description: 'Age of open issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
+      operationId: Open Issue Age (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2009-05-15T19:48:43.000Z'
+                  type: string
+                issue_id:
+                  description: 'Example: 38318'
+                  type: integer
+                open_date:
+                  description: 'Example: 3696'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+  /repos/:repo_id/issues-open-age:
+    get:
+      description: 'Age of open issues. '
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
+      operationId: Open Issue Age (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                date:
+                  description: 'Example: 2009-05-15T19:48:43.000Z'
+                  type: string
+                issue_id:
+                  description: 'Example: 38318'
+                  type: integer
+                open_date:
+                  description: 'Example: 3696'
+                  type: integer
+                repo_id:
+                  description: 'Example: 21000'
+                  type: integer
+                repo_name:
+                  description: 'Example: rails'
+                  type: string
+            type: array
+      tags:
+      - platform
+
   #utility endpoints
   /repo-groups:
     get:
@@ -560,110 +1504,6 @@ paths:
             type: array
       tags:
       - risk
-  /repo-groups/:repo_group_id/committers:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
-      operationId: Committers (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 372'
-                  type: integer
-                date:
-                  description: 'Example: 2007-01-01T00:00:00.000Z'
-                  type: string
-                rg_name:
-                  description: 'Example: Comcast'
-                  type: string
-            type: array
-      tags:
-      - risk
-  /repos/:repo_id/committers:
-    get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
-      operationId: Committers (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 1'
-                  type: integer
-                date:
-                  description: 'Example: 2018-10-25T00:00:00.000Z'
-                  type: string
-                repo_name:
-                  description: 'Example: weasel'
-                  type: string
-                rg_name:
-                  description: 'Example: Comcast'
-                  type: string
-            type: array
-      tags:
-      - risk
   /repo-groups/:repo_group_id/fork-count:
     get:
       description: 'Fork count. '
@@ -789,77 +1629,6 @@ paths:
                 repo_name:
                   description: 'Example: graphiql'
                   type: string
-            type: array
-      tags:
-      - risk
-  /repo-groups/:repo_group_id/license-coverage:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
-      operationId: License Coverage (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                coverage:
-                  description: 'Example: 0.373'
-                  type: string
-                license_declared_files:
-                  description: 'Example: 19'
-                  type: integer
-                name:
-                  description: 'Example: ActorServiceRegistry'
-                  type: string
-                total_files:
-                  description: 'Example: 51'
-                  type: integer
-            type: array
-      tags:
-      - risk
-  /repos/:repo_id/license-coverage:
-    get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
-      operationId: License Coverage (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                coverage:
-                  description: 'Example: 0.347'
-                  type: string
-                license_declared_file:
-                  description: 'Example: 33'
-                  type: integer
-                repo_name:
-                  description: 'Example: zucchini'
-                  type: string
-                total_files:
-                  description: 'Example: 95'
-                  type: integer
             type: array
       tags:
       - risk
@@ -2784,772 +3553,6 @@ paths:
                   type: string
                 throughput:
                   description: 'Example: 0.997531'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-active:
-    get:
-      description: 'Time series of number of issues that showed some activity during
-        a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
-      operationId: Issues Active (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 18'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21039'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails_xss'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-active:
-    get:
-      description: 'Time series of number of issues that showed some activity during
-        a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
-      operationId: Issues Active (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2011-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 30'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-closed:
-    get:
-      description: 'Time series of number of issues closed during a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Closed.md
-      operationId: Issues Closed (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 425'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21681'
-                  type: integer
-                repo_name:
-                  description: 'Example: incubator-zipkin'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-closed:
-    get:
-      description: 'Time series of number of issues closed during a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
-      operationId: Issues Closed (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2012-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 97'
-                  type: integer
-                repo_name:
-                  description: 'Example: incubator-pagespeed-ngx'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-closed-resolution-duration:
-    get:
-      description: 'Duration of time for issues to be resolved. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
-      operationId: Closed Issue Resolution Duration (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                closed_at:
-                  description: 'Example: 2019-05-22T05:27:29.000Z'
-                  type: string
-                created_at:
-                  description: 'Example: 2019-05-22T03:18:13.000Z'
-                  type: string
-                diffdate:
-                  description: 'Example: 0.0'
-                  type: string
-                gh_issue_number:
-                  description: 'Example: 4110'
-                  type: integer
-                issue_title:
-                  description: 'Example: rm incubating word'
-                  type: string
-                repo_name:
-                  description: 'Example: incubator-dubbo'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-closed-resolution-duration:
-    get:
-      description: 'Duration of time for issues to be resolved. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
-      operationId: Closed Issue Resolution Duration (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                closed_at:
-                  description: 'Example: 2019-06-17T03:12:48.000Z'
-                  type: string
-                created_at:
-                  description: 'Example: 2019-05-31T07:55:44.000Z'
-                  type: string
-                diffdate:
-                  description: 'Example: 16.0'
-                  type: string
-                gh_issue_number:
-                  description: 'Example: 4223'
-                  type: integer
-                issue_title:
-                  description: 'Example: Cloud Native PR'
-                  type: string
-                repo_id:
-                  description: 'Example: 21682'
-                  type: integer
-                repo_name:
-                  description: 'Example: incubator-dubbo'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-first-time-closed:
-    get:
-      description: 'Number of persons closing an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
-      operationId: Closed Issues New Contributor (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 3'
-                  type: integer
-                issue_date:
-                  description: 'Example: 2018-05-20T00:00:00.000Z'
-                  type: string
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-first-time-closed:
-    get:
-      description: 'Number of persons closing an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
-      operationId: Closed Issues New Contributors (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 3'
-                  type: integer
-                issue_date:
-                  description: 'Example: 2018-05-20T00:00:00.000Z'
-                  type: string
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-first-time-opened:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-opened.md
-      operationId: New Contributors of Issues (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 3'
-                  type: integer
-                issue_date:
-                  description: 'Example: 2018-05-20T00:00:00.000Z'
-                  type: string
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-first-time-opened:
-    get:
-      description: 'Number of persons opening an issue for the first time. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-opened.md
-      operationId: New Contributors of Issues (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                count:
-                  description: 'Example: 3'
-                  type: integer
-                issue_date:
-                  description: 'Example: 2018-05-20T00:00:00.000Z'
-                  type: string
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-maintainer-response-duration:
-    get:
-      description: 'Duration of time for issues to be resolved. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
-      operationId: Issue Response Time (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                average_days_comment:
-                  description: 'Example: 27.1111111111'
-                  type: string
-                repo_id:
-                  description: 'Example: 21987'
-                  type: integer
-                repo_name:
-                  description: 'Example: qpid-proton'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-maintainer-response-duration:
-    get:
-      description: 'Duration of time for issues to be resolved. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
-      operationId: Issue Response Time (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                average_days_comment:
-                  description: 'Example: 27.1111111111'
-                  type: string
-                repo_id:
-                  description: 'Example: 21987'
-                  type: integer
-                repo_name:
-                  description: 'Example: qpid-proton'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-new:
-    get:
-      description: 'Time series of number of new issues opened during a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
-      operationId: Issues New (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2019-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 318'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-new:
-    get:
-      description: 'Time series of number of new issues opened during a certain period. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
-      operationId: Issues New (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      - description: Periodicity specification.
-        in: path
-        name: period
-        schema:
-          type: string
-        type: string
-      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: begin_date
-        schema:
-          type: string
-        type: string
-      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
-        in: path
-        name: end_date
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2015-01-01T00:00:00.000Z'
-                  type: string
-                issues:
-                  description: 'Example: 116'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repo-groups/:repo_group_id/issues-open-age:
-    get:
-      description: 'Age of open issues. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
-      operationId: Open Issue Age (Repo Group)
-      parameters:
-      - description: Repository Group ID
-        in: path
-        name: repo_group_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2009-05-15T19:48:43.000Z'
-                  type: string
-                issue_id:
-                  description: 'Example: 38318'
-                  type: integer
-                open_date:
-                  description: 'Example: 3696'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
-                  type: string
-            type: array
-      tags:
-      - evolution
-  /repos/:repo_id/issues-open-age:
-    get:
-      description: 'Age of open issues. '
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
-      operationId: Open Issue Age (Repo)
-      parameters:
-      - description: Repository ID.
-        in: path
-        name: repo_id
-        schema:
-          type: string
-        type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            items:
-              properties:
-                date:
-                  description: 'Example: 2009-05-15T19:48:43.000Z'
-                  type: string
-                issue_id:
-                  description: 'Example: 38318'
-                  type: integer
-                open_date:
-                  description: 'Example: 3696'
-                  type: integer
-                repo_id:
-                  description: 'Example: 21000'
-                  type: integer
-                repo_name:
-                  description: 'Example: rails'
                   type: string
             type: array
       tags:
