@@ -35,6 +35,8 @@ class ResourceGoneException(Exception):
         super().__init__(message)
 
 class GithubDataAccess:
+    """Utilities for accessing the GitHub REST API
+    """
 
     def _base_url(self):
         return "https://api.github.com/"
