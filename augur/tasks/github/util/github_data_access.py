@@ -36,6 +36,15 @@ class ResourceGoneException(Exception):
 
 class GithubDataAccess:
 
+    def _base_url(self):
+        return "https://api.github.com/"
+
+    def issues_endpoint_url(self, owner, repo, trailing_slash = True):
+        """ https://api.github.com/repos/{owner}/{repo}/issues/ """
+        return f"https://api.github.com/repos/{owner}/{repo}/issues" + "/" if trailing_slash else ""
+
+
+    
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger

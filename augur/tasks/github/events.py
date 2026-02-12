@@ -48,9 +48,9 @@ def collect_events(repo_git: str, full_collection: bool):
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100"
-
     github_data_access = GithubDataAccess(key_auth, logger)
+
+    url = github_data_access.issues_endpoint_url(owner, repo) + "events?per_page=100"
 
     page_count = github_data_access.get_resource_page_count(url)
 
@@ -133,10 +133,10 @@ class BulkGithubEventCollection(GithubEventCollection):
     def _collect_events(self, repo_git: str, key_auth, since):
 
         owner, repo = get_owner_repo(repo_git)
-
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
             
         github_data_access = GithubDataAccess(key_auth, self._logger)
+
+        url = github_data_access.issues_endpoint_url(owner, repo) + "events"
 
         for event in github_data_access.paginate_resource(url):
 
@@ -314,7 +314,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
             issue_number = issue["issue_number"]
 
-            event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/events"
+            event_url = github_data_access.issues_endpoint_url(owner, repo) + f"{issue_number}/events"
             
             try:
 
@@ -377,7 +377,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
             pr_number = pr["gh_pr_number"]
 
-            event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/events"
+            event_url = github_data_access.issues_endpoint_url(owner, repo) + f"{pr_number}/events"
 
             try:
             
