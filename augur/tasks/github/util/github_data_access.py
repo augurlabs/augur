@@ -43,7 +43,7 @@ class GithubDataAccess:
 
     def issues_endpoint_url(self, owner, repo, trailing_slash = True):
         """ https://api.github.com/repos/{owner}/{repo}/issues/ """
-        return f"https://api.github.com/repos/{owner}/{repo}/issues" + ("/" if trailing_slash else "")
+        return f"{self._base_url()}repos/{owner}/{repo}/issues" + ("/" if trailing_slash else "")
 
 
     
