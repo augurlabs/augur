@@ -38,11 +38,26 @@ class GithubDataAccess:
     """Utilities for accessing the GitHub REST API
     """
 
-    def _base_url(self):
+    def _base_url(self) -> str:
+        """the github base URL with HTTP scheme and trailing slash, suitable for building specific API urls.
+
+        Returns:
+            str: the base url
+        """
         return "https://api.github.com/"
 
-    def issues_endpoint_url(self, owner, repo, trailing_slash = True):
-        """ https://api.github.com/repos/{owner}/{repo}/issues/ """
+    def issues_endpoint_url(self, owner:str, repo:str, trailing_slash = True) -> str:
+        """the github REST API url for the issues endpoint
+
+        Args:
+            owner (str): the owner/org of the repo
+            repo (str): the repo name
+            trailing_slash (bool, optional): Whether to include the trailing slash or not. Defaults to True.
+
+        Returns:
+            str: the assembled URL with values filled in. Example: https://api.github.com/repos/owner/repo/issues/
+        """
+    
         return f"{self._base_url()}repos/{owner}/{repo}/issues" + ("/" if trailing_slash else "")
 
 
