@@ -75,6 +75,7 @@ dependencies = [
     "xgboost==3.0.2",
     "xlrd==2.0.1",
     "xlsxwriter==1.3.7",
+    "typing-extensions>=4.5.0 ; python_full_version < '3.13'",
 ]
 
 [dependency-groups]
