@@ -38,13 +38,21 @@ class GithubDataAccess:
     """Utilities for accessing the GitHub REST API
     """
 
+    def _base_domain(self) -> str:
+        """the base domain against which api calls are assembled
+
+        Returns:
+            str: the base domain by itself
+        """
+        return "github.com"
+
     def _base_url(self) -> str:
         """the github base URL with HTTP scheme and trailing slash, suitable for building specific API urls.
 
         Returns:
             str: the base url
         """
-        return "https://api.github.com/"
+        return f"https://api.{self._base_domain()}/"
 
     def issues_endpoint_url(self, owner:str, repo:str, trailing_slash = True) -> str:
         """the github REST API url for the issues endpoint
