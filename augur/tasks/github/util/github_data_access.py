@@ -86,6 +86,32 @@ class GithubDataAccess:
         """
     
         return f"{self._base_url()}users/{username}" + ("/" if trailing_slash else "")
+
+    def user_endpoint_urls(self, username:str) -> dict:
+        """the github REST API urls beneath the users endpoint, in dict form.
+        Intended to enable the recreation of a subset of what is returned by the github API
+
+        Args:
+            username (str): the github username to query
+
+        Returns:
+            dict: a dict of various user sub urls like would be returned by github's API.
+        """
+        user_url = self.user_endpoint_url(username, trailing_slash=False)
+        return {
+            "url": user_url,
+            "html_url": f"https://github.com/{username}",
+            "followers_url": f"{user_url}/followers",
+            "following_url": user_url + "/following{/other_user}",
+            "gists_url": user_url + "/gists{/gist_id}",
+            "starred_url": user_url + "/starred{/owner}{/repo}",
+            "subscriptions_url": f"{user_url}/subscriptions",
+            "organizations_url": f"{user_url}/orgs",
+            "repos_url": f"{user_url}/repos",
+            "events_url": user_url + "/events{/privacy}",
+            "received_events_url": f"{user_url}/received_events",
+        }
+
     
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
