@@ -59,8 +59,20 @@ class GithubDataAccess:
         """
     
         return f"{self._base_url()}repos/{owner}/{repo}/issues" + ("/" if trailing_slash else "")
+    
+    def contributors_endpoint_url(self, owner:str, repo:str, trailing_slash = True) -> str:
+        """the github REST API url for the contributors endpoint
 
+        Args:
+            owner (str): the owner/org of the repo
+            repo (str): the repo name
+            trailing_slash (bool, optional): Whether to include the trailing slash or not. Defaults to True.
 
+        Returns:
+            str: the assembled URL with values filled in. Example: https://api.github.com/repos/owner/repo/contributors/
+        """
+    
+        return f"{self._base_url()}repos/{owner}/{repo}/contributors" + ("/" if trailing_slash else "")
     
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
