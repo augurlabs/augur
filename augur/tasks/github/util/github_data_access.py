@@ -95,6 +95,12 @@ class GithubDataAccess:
         self.key = None
         self.expired_keys_for_request = []
 
+
+    def get_user(self, username:str):
+        url = self.user_endpoint_url(username)
+
+        return self.get_resource(url)
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
