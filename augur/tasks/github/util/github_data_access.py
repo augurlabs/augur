@@ -156,6 +156,10 @@ class GithubDataAccess:
 
         return self.get_resource(url)
 
+    def perform_search(self, topic: str, query: str):
+        url = self.search_endpoint(topic, query)
+        return self.get_resource(url)
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
