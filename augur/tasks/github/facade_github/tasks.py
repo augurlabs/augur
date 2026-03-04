@@ -143,6 +143,14 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
             #"data_source": interface.data_source
         }
 
+        # extra processing unique to facade based contributor collection
+        if not cntrb.get('cntrb_canonical'):
+            cntrb['cntrb_canonical'] = emailFromCommitData
+        if not cntrb.get('cntrb_email'):
+            cntrb['cntrb_canonical'] = emailFromCommitData
+        
+        if not cntrb.get('cntrb_full_name'):
+            cntrb['cntrb_full_name'] = name_field
 
         
         #Executes an upsert with sqlalchemy 
