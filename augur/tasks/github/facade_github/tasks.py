@@ -14,7 +14,7 @@ from augur.application.db.lib import bulk_insert_dicts
 
 
 
-def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
+def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id, tool_source:str, tool_version:str, data_source:str):
 
     github_data_access = GithubDataAccess(auth, logger)
 
@@ -220,6 +220,10 @@ def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
 def insert_facade_contributors(self, repo_git):
 
+    tool_source = "Insert Contributors task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
     # Set platform id to 1 since this task is github specific
     platform_id = 1
 
@@ -301,12 +305,12 @@ def insert_facade_contributors(self, repo_git):
         batch.append(dict(row))
 
         if len(batch) >= facade_batch_size:
-            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
             batch.clear()
 
     # Process remaining items in batch
     if batch:
-        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
