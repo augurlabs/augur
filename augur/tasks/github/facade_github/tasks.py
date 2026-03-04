@@ -104,6 +104,8 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
         cntrb = extract_github_contributor(user_data, tool_source, tool_version, data_source)
+        if cntrb is None:
+            continue
 
         # extra processing unique to facade based contributor collection
         if not cntrb.get('cntrb_canonical'):
