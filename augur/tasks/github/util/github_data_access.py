@@ -5,6 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 from augur.util.keys import mask_key
+import urllib.parse
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -120,7 +121,27 @@ class GithubDataAccess:
             "received_events_url": f"{user_url}/received_events",
         }
 
-    
+
+    def search_endpoint(self, topic: str, query: str) -> str:
+        """construct a github API call to perform a search
+
+        Args:
+            topic (str): the topic to search. Valid options are: users, code, commits, issues, labels, repositories, topics. 
+            query (str): the query string to search as you'd type it into githubs serach bar. Example: "email@example.com in:email type:user"
+
+        Raises:
+            ValueError: if an invalid topic is provided
+
+        Returns:
+            str: a URL that can be queried to perform the search
+        """
+        topic = topic.lower()
+        if topic not in ["users", "code", "commits", "issues", "labels", "repositories", "topics" ]:
+            raise ValueError(f"Invalid topic '{topic}' provided for searching github.")
+
+        return f"{self._base_url()}search/{topic}?q={urllib.parse.quote(query)}"
+
+
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
