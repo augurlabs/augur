@@ -111,7 +111,7 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         if not cntrb.get('cntrb_canonical'):
             cntrb['cntrb_canonical'] = emailFromCommitData
         if not cntrb.get('cntrb_email'):
-            cntrb['cntrb_canonical'] = emailFromCommitData
+            cntrb['cntrb_email'] = emailFromCommitData
         
         if not cntrb.get('cntrb_full_name'):
             cntrb['cntrb_full_name'] = name_field
