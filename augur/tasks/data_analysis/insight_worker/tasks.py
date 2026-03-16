@@ -106,7 +106,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
                 AND ri_date < :min_date
     """)
 
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         result = conn.execute(delete_record_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     logger.info("Deleting out of date data points ...\n")
@@ -128,7 +128,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
             AND repo_insights.ri_field = to_delete.ri_field
     """)
 
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         result = conn.execute(delete_points_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     # get table values to check for dupes later on
@@ -561,7 +561,7 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             result = conn.execute(deleteSQL)
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
@@ -579,7 +579,7 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             result = conn.execute(deleteSQL)
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
@@ -622,7 +622,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                             AND ri_field = '{}'
                 """.format(record['repo_id'], record['ri_metric'], record['ri_field'])
                 try:
-                    with engine.connect() as conn:
+                    with engine.begin() as conn:
                         result = conn.execute(deleteSQL)
                 except Exception as e:
                     logger.info("Error occured deleting insight slot: {}".format(e))
@@ -676,7 +676,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                     AND ri_metric = '{}'
         """.format(insight['repo_id'], insight['ri_metric'])
         try:
-            with engine.connect() as conn:
+            with engine.begin() as conn:
                 result = conn.execute(deleteSQL)
         except Exception as e:
             logger.info("Error occured deleting insight slot: {}".format(e))

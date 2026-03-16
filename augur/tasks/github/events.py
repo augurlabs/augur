@@ -287,7 +287,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         engine = get_engine()
 
-        with engine.connect() as connection:
+        with engine.begin() as connection:
 
             if since:
                 # TODO: Remove src id if it ends up not being needed
@@ -352,7 +352,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         engine = get_engine()
 
-        with engine.connect() as connection:
+        with engine.begin() as connection:
 
             if since:
                 query = text(f"""
