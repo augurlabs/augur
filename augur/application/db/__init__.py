@@ -4,8 +4,6 @@ from contextlib import contextmanager
 
 from augur.application.db.engine import create_database_engine, get_database_string
 
-from metadata import __version__
-
 engine = None
 Session = None
 
@@ -14,7 +12,7 @@ def get_engine():
 
     if engine is None:
         url = get_database_string()
-        engine = create_database_engine(url=url, poolclass=StaticPool, connect_args={"application_name": f"augur v{__version__}"})  
+        engine = create_database_engine(url=url, poolclass=StaticPool, connect_args={"application_name": f"augur"})  
         Session = sessionmaker(bind=engine)
     
     return engine
