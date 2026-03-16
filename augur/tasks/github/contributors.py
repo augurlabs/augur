@@ -36,6 +36,7 @@ def process_contributors():
                 Contributor.cntrb_created_at.is_(None),
                 Contributor.cntrb_last_used.is_(None)
             )
+            .limit(100)
         )
         contributors = execute_session_query(query, 'all')
 
