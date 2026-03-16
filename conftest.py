@@ -13,7 +13,7 @@ from sqlalchemy.pool import StaticPool
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
-
+from metadata import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,8 @@ def generate_db_from_template(template_name):
     create_database(conn, cursor, test_db_name, template_name)
 
     # create engine to connect to db
-    engine = create_database_engine(test_db_string, poolclass=StaticPool)
+    engine = create_database_engine(test_db_string, poolclass=StaticPool, connect_args={"application_name": f"augur v{__version__}"})
+
 
     yield engine
 
