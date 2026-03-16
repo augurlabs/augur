@@ -329,7 +329,7 @@ def get_server_cache(cache_manager) -> Cache:
 
 logger = AugurLogger("server").get_logger()
 url = get_database_string()
-engine = create_database_engine(url, poolclass=StaticPool, connect_args={"application_name": f"augur v{augur_code_version}"})
+engine = create_database_engine(url, poolclass=StaticPool, connect_args={"application_name": f"augur v{augur_code_version} api"})
 db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 

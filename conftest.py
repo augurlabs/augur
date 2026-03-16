@@ -104,7 +104,7 @@ def generate_db_from_template(template_name):
     create_database(conn, cursor, test_db_name, template_name)
 
     # create engine to connect to db
-    engine = create_database_engine(test_db_string, poolclass=StaticPool, connect_args={"application_name": f"augur v{__version__}"})
+    engine = create_database_engine(test_db_string, poolclass=StaticPool, connect_args={"application_name": f"augur tests v{__version__}"})
 
 
     yield engine

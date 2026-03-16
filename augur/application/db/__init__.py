@@ -44,7 +44,7 @@ def get_session():
 def temporary_database_engine():
 
     url = get_database_string()
-    temporary_database_engine = create_database_engine(url=url, poolclass=StaticPool, connect_args={"application_name": f"augur v{__version__}"})  
+    temporary_database_engine = create_database_engine(url=url, poolclass=StaticPool, connect_args={"application_name": f"augur v{__version__} temporary"})  
 
     try:
         yield temporary_database_engine
