@@ -29,7 +29,15 @@ def process_contributors():
 
     with get_session() as session:
 
-        query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at.is_(None), Contributor.cntrb_last_used.is_(None))
+        query = (
+            session.query(Contributor)
+            .filter(
+                Contributor.data_source == data_source,
+                Contributor.cntrb_created_at.is_(None),
+                Contributor.cntrb_last_used.is_(None)
+            )
+            .limit(500)
+        )
         contributors = execute_session_query(query, 'all')
 
     contributors_len = len(contributors)
