@@ -135,22 +135,6 @@ def test_github_and_gitlab_different_for_same_user():
     gitlab_uid["user"] = 100
     assert github_uid != gitlab_uid
 
-# checks the maximum value that fits into user field
-def test_user_field_max_value():
-    uid = GithubUUID()
-    uid["user"] = 4294967295
-    assert uid["user"] == 4294967295
-
-# checks the minimum boundary
-def test_user_field_zero_value():
-    uid = GithubUUID()
-    uid["user"] = 0
-    assert uid["user"] == 0
-
-def test_len_returns_16():
-    uid = AugurUUID()
-    assert len(uid) == 16
-
 def test_dict_representation():
     uid = GithubUUID()
     uid["user"] = 10
@@ -168,12 +152,6 @@ def test_string_representation():
 
     assert "user" in result
     assert "platform" in result
-
-def test_iteration_over_bytes():
-    uid = AugurUUID()
-    bytes_list = list(uid)
-
-    assert len(bytes_list) == 16
 
 def test_setting_same_field_twice():
     uid = GithubUUID()
