@@ -10,11 +10,12 @@ from augur.application.db.lib import execute_sql, get_contributor_aliases_by_ema
 from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
 
 
 
 
-def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
+def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id, tool_source:str, tool_version:str, data_source:str):
 
     github_data_access = GithubDataAccess(auth, logger)
 
@@ -102,47 +103,18 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         # Get name from commit if not found by GitHub
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
+        cntrb = extract_github_contributor(user_data, tool_source, tool_version, data_source)
+        if cntrb is None:
+            continue
 
-        cntrb_id = GithubUUID()
-        cntrb_id["user"] = int(user_data['id'])
-        cntrb_id["platform"] = platform_id
-
-        # try to add contributor to database
-        cntrb = {
-            "cntrb_id" : cntrb_id.to_UUID(),
-            "cntrb_login": user_data['login'],
-            "cntrb_created_at": user_data['created_at'],
-            "cntrb_email": user_data['email'] if 'email' in user_data else None,
-            "cntrb_company": user_data['company'] if 'company' in user_data else None,
-            "cntrb_location": user_data['location'] if 'location' in user_data else None,
-            # "cntrb_type": , dont have a use for this as of now ... let it default to null
-            "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-            "gh_user_id": user_data['id'],
-            "gh_login": user_data['login'],
-            "gh_url": user_data['url'],
-            "gh_html_url": user_data['html_url'],
-            "gh_node_id": user_data['node_id'],
-            "gh_avatar_url": user_data['avatar_url'],
-            "gh_gravatar_id": user_data['gravatar_id'],
-            "gh_followers_url": user_data['followers_url'],
-            "gh_following_url": user_data['following_url'],
-            "gh_gists_url": user_data['gists_url'],
-            "gh_starred_url": user_data['starred_url'],
-            "gh_subscriptions_url": user_data['subscriptions_url'],
-            "gh_organizations_url": user_data['organizations_url'],
-            "gh_repos_url": user_data['repos_url'],
-            "gh_events_url": user_data['events_url'],
-            "gh_received_events_url": user_data['received_events_url'],
-            "gh_type": user_data['type'],
-            "gh_site_admin": user_data['site_admin'],
-            "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-            # Get name from commit if api doesn't get it.
-            "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-            #"tool_source": interface.tool_source,
-            #"tool_version": interface.tool_version,
-            #"data_source": interface.data_source
-        }
-
+        # extra processing unique to facade based contributor collection
+        if not cntrb.get('cntrb_canonical'):
+            cntrb['cntrb_canonical'] = emailFromCommitData
+        if not cntrb.get('cntrb_email'):
+            cntrb['cntrb_email'] = emailFromCommitData
+        
+        if not cntrb.get('cntrb_full_name'):
+            cntrb['cntrb_full_name'] = name_field
 
         
         #Executes an upsert with sqlalchemy 
@@ -211,6 +183,10 @@ def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 # Update the contributors table from the data facade has gathered.
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
 def insert_facade_contributors(self, repo_git):
+
+    tool_source = "Insert Contributors task"
+    tool_version = "2.0"
+    data_source = "Github API"
 
     # Set platform id to 1 since this task is github specific
     platform_id = 1
@@ -293,12 +269,12 @@ def insert_facade_contributors(self, repo_git):
         batch.append(dict(row))
 
         if len(batch) >= facade_batch_size:
-            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
             batch.clear()
 
     # Process remaining items in batch
     if batch:
-        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
