@@ -166,3 +166,6 @@ ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false
 exclude_gitignore = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]
