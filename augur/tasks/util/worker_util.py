@@ -14,33 +14,6 @@ import subprocess
 from augur.tasks.util.metadata_exception import MetadataException
 
 
-def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
-    
-    if not dataList or not task:
-        raise AssertionError
-    
-    print(f"Splitting {len(dataList)} items")
-    #numpyData = np.array(list(dataList))
-    listsSplitForProcesses = np.array_split(list(dataList), processes)
-    print("Done splitting items.")
-
-    #print("args")
-    #print(args)
-    task_list = [task.si(data.tolist(), *args) for data in listsSplitForProcesses]
-
-    jobs = group(task_list)
-
-    return jobs
-
-
-
-def wait_child_tasks(ids_list):
-    for task_id in ids_list:
-        prereq = AsyncResult(str(task_id))
-        with allow_join_result():
-            prereq.wait()
-
-
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     """Remove duplicate dicts from a list
 
@@ -80,29 +53,6 @@ def remove_duplicates_by_uniques(data, uniques):
             unique_data.append(x)
 
     return unique_data
-
-
-
-
-def remove_duplicate_naturals(data, natural_keys):
-    #Removes duplicate records with the same natural values only.
-
-    new_data = []
-    unique_values = []
-
-    for record in data:
-
-        #Get the unique part of the data.
-        unique_part = {}
-        for key in natural_keys:
-            unique_part[key] = record[key]
-        
-        if unique_part not in unique_values:
-            unique_values.append(unique_part)
-            new_data.append(record)
-    
-    #print(new_data)
-    return new_data
 
 #4th root of 10,000 is 10
 #ten days for a 10,000 weight repo to reach zero.

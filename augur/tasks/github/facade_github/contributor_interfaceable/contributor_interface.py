@@ -27,86 +27,6 @@ def clean_dict(d):
     return {k: ("" if v is None else v) for k, v in d.items()}
 
 
-# deprecated in favor of GithubDataAcess.get_resource()
-def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
-    """Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-    
-    NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
-    No functional change in this function body; logic preserved fully.
-    This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
-
-
-    Returns:
-        None on failure. Dict on success
-    """
-    attempts = 0
-    response_data = None
-    success = False
-
-    while attempts < 10:
-        try:
-            response = hit_api(session.oauths, url, logger)
-        except TimeoutError:
-            logger.warning(
-                f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
-            time.sleep(timeout_wait)
-            continue
-
-        if not response:
-            attempts += 1
-            continue
-
-        # New (corrected anti-pattern): check if response is empty
-        try:
-            response_data = json.loads(response.text)
-        except json.JSONDecodeError as je:
-            logger.error(f"Failed to decode response text as JSON: {je}")
-            attempts += 1
-            continue
-
-        if type(response_data) == dict:
-            err = process_dict_response(logger, response, response_data)
-
-            # ✅ No change here: continues retry loop on soft API error
-            if err and err != GithubApiResult.SUCCESS:
-                attempts += 1
-                logger.warning(f"err: {err}")
-                continue
-
-            success = True
-            break
-
-        elif type(response_data) == list:
-            logger.warning("Wrong type returned, trying again...")
-            logger.debug(f"Returned list: {response_data}")
-
-        elif type(response_data) == str:
-            logger.warning(f"Warning! page_data was string: {response_data}")
-            if "<!DOCTYPE html>" in response_data:
-                logger.warning("HTML was returned, trying again...\n")
-            elif len(response_data) == 0:
-                logger.warning("Empty string, trying again...\n")
-            else:
-                try:
-                    # ✅ Same logic: try to parse raw string and retry if successful
-                    response_data = json.loads(response_data)
-
-                    err = process_dict_response(logger, response, response_data)
-                    if err and err != GithubApiResult.SUCCESS:
-                        continue
-
-                    success = True
-                    break
-                except:
-                    pass
-
-        attempts += 1
-
-    if not success:
-        return None
-
-    return response_data
-
 
 def create_endpoint_from_email(email):
     # Note: I added "+type:user" to avoid having user owned organizations be returned
@@ -190,31 +110,34 @@ def insert_alias(logger, contributor, email):
 
     return
 
-def resolve_if_login_existing(logger, contributor) -> bool:
-    """Takes the user data from the endpoint as arg.
-    Updates the alias table if the login is already in the contributor's table with the new email.
+# No longer used so commenting out for now
+# def resolve_if_login_existing(logger, contributor) -> bool:
+#     """Takes the user data from the endpoint as arg.
+#     Updates the alias table if the login is already in the contributor's table with the new email.
 
-    Returns:
-        bool: Whether the login was found in the contributors table.
-    """
-    # check if login exists in contributors table
-    select_cntrbs_query = s.sql.text("""
-        SELECT cntrb_id from contributors
-        WHERE cntrb_login = :gh_login_value
-    """)
+#     Returns:
+#         bool: Whether the login was found in the contributors table.
+#     """
+#     # check if login exists in contributors table
+#     select_cntrbs_query = s.sql.text("""
+#         SELECT cntrb_id from contributors
+#         WHERE cntrb_login = :gh_login_value
+#     """)
 
-    # Bind parameter
-    select_cntrbs_query = select_cntrbs_query.bindparams(
-        gh_login_value=contributor['cntrb_login'])
-    result = execute_sql(select_cntrbs_query)
+#     # Bind parameter
+#     select_cntrbs_query = select_cntrbs_query.bindparams(
+#         gh_login_value=contributor['cntrb_login'])
+#     result = execute_sql(select_cntrbs_query)
 
-    # if yes
-    if len(result.fetchall()) >= 1:
-        # self.insert_alias(contributor, email) Functions should do one thing ideally.
-        return True
+#     # if yes
+#     if len(result.fetchall()) >= 1:
+#         # self.insert_alias(contributor, email) Functions should do one thing ideally.
+#         return True
 
-    # If not found, return false
-    return False
+#     # If not found, return false
+#     return False
+
+
 """
 No longer used after orm upsert implement
 def update_contributor(self, cntrb, max_attempts=3):
