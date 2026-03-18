@@ -138,52 +138,6 @@ def insert_alias(logger, contributor, email):
 #     return False
 
 
-"""
-No longer used after orm upsert implement
-def update_contributor(self, cntrb, max_attempts=3):
-
-    # Get primary key so that we can update
-    contributor_table_data = self.db.execute(
-        s.sql.select([s.column('cntrb_id'), s.column('cntrb_canonical')]).where(
-            self.contributors_table.c.gh_user_id == cntrb["gh_user_id"]
-        )
-    ).fetchall()
-
-    attempts = 0
-
-    # make sure not to overwrite canonical email if it isn't NULL
-
-    canonical_email = contributor_table_data[0]['cntrb_canonical']
-    # check if the contributor has a NULL canonical email or not
-    #self.logger.info(f"The value of the canonical email is : {canonical_email}")
-
-    if canonical_email is not None:
-        del cntrb["cntrb_canonical"]
-        self.logger.info(
-            f"Existing canonical email {canonical_email} found in database and will not be overwritten.")
-
-    while attempts < max_attempts:
-        try:
-            # Using with on a sqlalchemy connection prevents 'Connection refused' error
-            # Ensures all database requests use the same connection
-            with self.db.connect() as connection:
-                # Use primary key to update the correct data.
-                # It is important that non null data is not overwritten.
-                connection.execute(self.contributors_table.update().where(
-                    self.contributors_table.c.cntrb_id == contributor_table_data[0]['cntrb_id']
-                ).values(cntrb))
-            break  # break if success.
-        except Exception as e:
-            self.logger.info(
-                f"Ran into exception updating contributor with data: {cntrb}. Error: {e}")
-            # give a delay so that we have a greater chance of success.
-            time.sleep(1)
-
-        attempts += 1
-"""
-
-
-
 def fetch_username_from_email(logger, auth, commit) -> dict | None:
     """Try every distinct email found within a commit for possible username resolution.
     Add email to garbage table if can't be resolved.
