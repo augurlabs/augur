@@ -79,6 +79,10 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
+    if not github_data_access.check_prs_enabled(owner, repo):
+        logger.info(f"{owner}/{repo}: Pull requests appear to be disabled for this repo. Skipping.")
+        return
+
     num_pages = github_data_access.get_resource_page_count(url)
 
     logger.debug(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")

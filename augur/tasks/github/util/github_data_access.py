@@ -60,6 +60,22 @@ class GithubDataAccess:
 
         return (100 * (num_pages -1)) + len(data)
 
+    def check_prs_enabled(self, owner: str, repo: str,) -> bool:
+        """
+        Checks whether pull requests are enabled for a repository.
+        Returns False if PRs are disabled (404 on /pulls) and true if there are PRs.
+        """
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls?per_page=1"
+
+        try:
+            self.get_resource_page_count(url)
+            return True
+        except UrlNotFoundException:
+            self.logger.info(f"{owner}/{repo}: Pull requests are disabled. Skipping PR collection.")
+            return False
+
+
     def paginate_resource(self, url):
 
         response = self.make_request_with_retries(url)
