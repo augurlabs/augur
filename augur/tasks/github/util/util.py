@@ -9,6 +9,63 @@ from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlData
 from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
+
+def sanity_check_email(possible_email:str) -> str:
+    """Accept a string that might contain an email and attempt to validate it
+    This was built for performing some basic sanity checking before attempting to use
+    the information in an email address for processing.
+
+    It is built to be simple without new libraries for now
+    since the intent is more for basic sanity checks to aid in parsing a known format.
+    It is not (yet) fully RFC-compliant.
+
+    If it becomes heavily used, we should defer to a well-made library
+
+    Args:
+        possible_email (str): a string that might contain an email
+
+    Returns:
+        str: a string representing what should (mostly) be a valid email address. None is returned if no valid email could be found.
+    """
+    
+    try:
+        if possible_email is None:
+            return None
+        
+        candidate_email = str(possible_email)
+
+
+        at_pos = candidate_email.find("@")
+        if at_pos == -1:
+            # email cannot possibly be valid without an @ sign
+            return None
+
+        preceeding_space = candidate_email.rfind(" ", 0)
+        following_space = candidate_email.find(" ", at_pos)
+        search_result = (preceeding_space != -1, following_space != -1)
+
+        if search_result == (True, True):
+            # spaces were on either side
+            candidate_email = candidate_email[preceeding_space, following_space + 1]
+        elif  search_result == (False, True):
+            # space after
+            candidate_email = candidate_email[:following_space + 1]
+        elif  search_result == (True, False):
+            # space after
+            candidate_email = candidate_email[preceeding_space:]
+        # otherwise, there were no spaces, so the string stays the same.
+
+        if not candidate_email.isascii():
+            # non-ascii is pretty uncommon, especially for narrow usecases like
+            # checking for an existing domain like the github noreply domain.
+            # if this is insufficient, a library may be a better option.
+
+            return None
+
+        return candidate_email
+    except Exception:
+        return None
+
 def get_repo_src_id(owner, repo, logger):
     
 
