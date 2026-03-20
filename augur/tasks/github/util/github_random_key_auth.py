@@ -3,7 +3,9 @@
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from sqlalchemy.orm import Session
+from typing_extensions import deprecated
 
+@deprecated("This class is deprecated. Use the KeyClient interface to the Keymanager process instead.")
 class GithubRandomKeyAuth(RandomKeyAuth):
     """Defines a github specific RandomKeyAuth class so 
     github collections can have a class randomly selects an api key for each request    
