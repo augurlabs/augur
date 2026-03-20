@@ -5,6 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 from augur.util.keys import mask_key
+import urllib.parse
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -44,6 +45,35 @@ class GithubDataAccess:
         self.key = None
         self.expired_keys_for_request = []
 
+    def endpoint_url(self, path: str, params: dict = None) -> str:
+        """Build a URL for a github endpoint using the specified path and query parameters
+
+        Args:
+            path (str): the path to use (i.e. "/users/MoralCode")
+            params (dict): optional query parameters to add to the url, as a dict
+
+        Returns:
+            str: the full URL to the specified resource.
+        """
+        # using pythons url processing library this way helps handle accidental
+        # inclusion of query parameters in the path string, ensuring all query
+        # parameters are properly encoded and escaped
+
+        input_url_parts = urllib.parse.urlsplit(path)
+        final_query_parameters = dict()
+
+        if input_url_parts.query != '':
+            final_query_parameters.update(
+                parse_qs(input_url_parts.query)
+            )
+        
+        if params != None:
+            final_query_parameters.update(params)
+
+        return urllib.parse.urlunsplit(
+            ('https', 'api.github.com', input_url_parts.path, urllib.parse.urlencode(final_query_parameters), '')
+        )
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
@@ -65,10 +95,8 @@ class GithubDataAccess:
         Checks whether pull requests are enabled for a repository.
         Returns False if PRs are disabled (404 on /pulls) and true if there are PRs.
         """
-
-        url = f"https://api.github.com/repos/{owner}/{repo}/pulls?per_page=1"
-
         try:
+            url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls", {"per_page": "1"})
             self.get_resource_page_count(url)
             return True
         except UrlNotFoundException:
