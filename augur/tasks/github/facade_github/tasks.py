@@ -72,19 +72,8 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
     
         if login == None or login == "":
             logger.error("Failed to get login from supplemental data!")
-
-            unresolved = {
-                "email": email,
-                "name": name,
-            }
-            logger.debug(f"No more username resolution methods available. Inserting data into unresolved table: {unresolved}")
-
-            try:
-                unresolved_natural_keys = ['email']
-                bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
-            except Exception as e:
-                logger.error(
-                    f"Could not create new unresolved email {email}. Error: {e}")
+            mark_unresolved(name, email, logger)
+            
             # move on to the next contributor
             continue
 
@@ -155,6 +144,22 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
     
         
     return
+
+
+def mark_unresolved(name, email, logger):
+    unresolved = {
+        "email": email,
+        "name": name,
+    }
+    logger.debug(f"No more username resolution methods available. Inserting data into unresolved table: {unresolved}")
+
+    try:
+        unresolved_natural_keys = ['email']
+        bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+    except Exception as e:
+        logger.error(
+            f"Could not create new unresolved email {email}. Error: {e}")
+
 
 
 def link_commits_to_contributor(logger, facade_helper, contributorQueue):
