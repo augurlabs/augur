@@ -96,7 +96,7 @@ class GithubDataAccess:
         Returns False if PRs are disabled (404 on /pulls) and true if there are PRs.
         """
         try:
-            url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls", {"per_page": "1"})
+            url = self.endpoint_url(f"repos/{owner}/{repo}/pulls", {"per_page": "1"})
             self.get_resource_page_count(url)
             return True
         except UrlNotFoundException:

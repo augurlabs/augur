@@ -75,9 +75,10 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     logger.debug(f"Collecting pull requests for {owner}/{repo}")
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc&sort=updated"
-
     github_data_access = GithubDataAccess(key_auth, logger)
+
+    search_args = {"state": "all", "direction": "desc", "sort": "updated"}
+    url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls", search_args)
 
     if not github_data_access.check_prs_enabled(owner, repo):
         logger.info(f"{owner}/{repo}: Pull requests appear to be disabled for this repo. Skipping.")
