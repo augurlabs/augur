@@ -116,12 +116,12 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
         raise ValueError("Augur should have a facade repo base directory set in the config. It is unsafe to continue without one")
 
 
-    with ctx.obj.engine.begin() as connection:
+    with DatabaseSession(logger, ctx.obj.engine) as session:
 
         click.echo("\tcounting total affected rows...", nl=False)
 
         total_count_query = s.select(func.count()).where(Commit.cmt_author_name == '')
-        total_count = connection.execute(total_count_query).scalar_one()
+        total_count = session.execute(total_count_query).scalar_one()
 
         click.echo(f"found {total_count} rows.")
 
@@ -130,7 +130,7 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
 
         # any queries that attempt to get one row per commit are incredibly slow
         query = s.select(func.distinct(Commit.repo_id)).where(Commit.cmt_author_name == '').limit(limit)
-        repos = connection.execute(query).scalars().all()
+        repos = session.execute(query).scalars().all()
     
         # click.echo("\tProcessing empty commit authors")
 
@@ -147,7 +147,7 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
 
             click.echo(f"\tFetching affected commits in repo id {repo_id}, path {absolute_path}...", nl=False)
             query = s.select(func.distinct(Commit.cmt_commit_hash)).where(Commit.cmt_author_name == '', Commit.repo_id == repo_id)
-            unique_commit_hashes = connection.execute(query).scalars().all()
+            unique_commit_hashes = session.execute(query).scalars().all()
             append_log_file(affected_commits_file, unique_commit_hashes)
             click.echo(len(unique_commit_hashes))
               # TODO: save/append to list of affected commits
