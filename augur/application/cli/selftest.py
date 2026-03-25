@@ -146,11 +146,10 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
 
         click.echo(f"found {total_count} rows.")
 
-        limit = 20
-        click.echo(f"\tFetching the first {limit} affected repos...")
+        click.echo(f"\tFetching the affected repos...")
 
         # any queries that attempt to get one row per commit are incredibly slow
-        query = s.select(func.distinct(Commit.repo_id)).where(Commit.cmt_author_name == '').limit(limit)
+        query = s.select(func.distinct(Commit.repo_id)).where(Commit.cmt_author_name == '')
         repos = session.execute(query).scalars().all()
     
         # click.echo("\tProcessing empty commit authors")
