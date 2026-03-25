@@ -190,7 +190,6 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
                 
                 append_log_file(all_affected_rows_file, commit_changes)
 
-                sample = commit_changes[0]
 
                 conditions = [all((
                     s.cmt_author_email == commit.author.email,
