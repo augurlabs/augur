@@ -21,7 +21,6 @@ from pathlib import Path
 
 # from augur.application.db.session import DatabaseSession
 from datetime import datetime
-from augur.cli import ENVVAR_PREFIX
 
 from ._cli_util import get_db_version
 
@@ -33,6 +32,9 @@ load_dotenv()
 
 
 logger = logging.getLogger(__name__)
+
+
+ENVVAR_PREFIX = "AUGUR_"
 
 
 @click.group("selftest", short_help="Augur self-testing utilities")
