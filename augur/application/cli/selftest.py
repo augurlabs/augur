@@ -21,7 +21,6 @@ from pathlib import Path
 
 # from augur.application.db.session import DatabaseSession
 from datetime import datetime
-from augur.application.db.models import Repo
 
 from ._cli_util import get_db_version
 
