@@ -115,6 +115,8 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
     if repo_base_directory is None:
         raise ValueError("Augur should have a facade repo base directory set in the config. It is unsafe to continue without one")
 
+    if not repo_base_directory.endswith("/"):
+        repo_base_directory += "/"
 
     with DatabaseSession(logger, ctx.obj.engine) as session:
 
