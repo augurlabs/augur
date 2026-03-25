@@ -165,6 +165,10 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
             #Get the huge list of commits to process.
             absolute_path = get_absolute_repo_path(repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
             repo_loc = (f"{absolute_path}/.git")
+            try:
+                lg2_repo = Repository(repo_loc)
+            except pygit2.GitError as e:
+                click.echo(f"Error opening repo: " + e)
 
             click.echo(f"\tFetching affected commits in repo id {repo_id}, path {absolute_path}...", nl=False)
             query = s.select(func.distinct(Commit.cmt_commit_hash)).where(Commit.cmt_author_name == '', Commit.repo_id == repo_id)
