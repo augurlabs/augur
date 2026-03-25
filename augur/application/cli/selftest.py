@@ -190,7 +190,7 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
                     s.cmt_author_email == commit.author.email,
                     s.cmt_committer_name == commit.committer.name,
                     s.cmt_committer_email == commit.committer.email,
-                    s.cmt_committer_email == commit.committer.email,
+                    # s.cmt_committer_email == commit.committer.email,
                     s.cmt_commit_hash == commithash
                 )) for s in commit_changes]
                 click.echo(f"sanity check: {all(conditions)}")
