@@ -92,8 +92,19 @@ def run_selftest_repair(ctx, batch_size, dry_run):
 
 
     with ctx.obj.engine.begin() as connection:
+
+        click.echo("\tcounting total affected rows...", nl=False)
+
+        total_count_query = s.select(func.count()).where(Commit.cmt_author_name == '')
+        total_count = connection.execute(total_count_query).scalar_one()
+
+        click.echo(f"found {total_count} rows.")
+
+        limit = 20
+        click.echo(f"\tFetching the first {limit} affected repos...")
+
         # any queries that attempt to get one row per commit are incredibly slow
-        query = s.select(func.distinct(Commit.repo_id)).where(Commit.cmt_author_name == '').limit(20)
+        query = s.select(func.distinct(Commit.repo_id)).where(Commit.cmt_author_name == '').limit(limit)
         repos = connection.execute(query).scalars().all()
     
         # click.echo("\tProcessing empty commit authors")
