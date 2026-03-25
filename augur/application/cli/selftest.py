@@ -74,11 +74,12 @@ def append_log_file(file:Path, values):
 @click.option("--batch-size", default=1000, help="Set the number of records to repair in each repair operation (to avoid queries taking forever)")
 @click.option("--dry-run", is_flag=True, default=False, help="Skip the final updating of values to demonstrate what work would be done without doing it")
 @click.option("--output-dir", default=".", help="A path to the directory where output files should be written")
+@click.option("--facade-dir", default=None, help="The path to the directory where facade git clones are stored")
 @test_connection
 @test_db_connection
 @with_database
 @click.pass_context
-def run_selftest_repair(ctx, batch_size, dry_run, output_dir):
+def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
 
     tool_source = "Augur Selftest Repair"
     tool_version = "0.1"
@@ -102,12 +103,17 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir):
     affected_repos_file = output_dir.joinpath("3740_affected_repos.csv")
     all_affected_rows_file = output_dir.joinpath("3740_all_affected_rows.csv")
 
-    with DatabaseSession(logger, ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
-        
-        repo_base_directory = config.get_value("Facade", "repo_directory")
-        if repo_base_directory is None:
-            raise ValueError("Augur should have a facade repo base directory set in the config. It is unsafe to continue without one")
+    repo_base_directory = facade_dir
+
+    if repo_base_directory is None:
+
+        with DatabaseSession(logger, ctx.obj.engine) as session:
+            config = AugurConfig(logger, session)
+            
+            repo_base_directory = config.get_value("Facade", "repo_directory")
+
+    if repo_base_directory is None:
+        raise ValueError("Augur should have a facade repo base directory set in the config. It is unsafe to continue without one")
 
 
     with ctx.obj.engine.begin() as connection:
