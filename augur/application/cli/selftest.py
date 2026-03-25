@@ -3,6 +3,7 @@ import logging
 import click
 import sqlalchemy as s
 import csv
+import os
 from sqlalchemy import select, func
 from augur.application.db.lib import get_repo_by_repo_id
 from augur.application.db.session import DatabaseSession
@@ -140,6 +141,15 @@ def run_selftest_repair(ctx, dry_run, output_dir, facade_dir):
 
 
     click.echo(f"Using repo base directory '{repo_base_directory}'")
+
+    test_repo = repo_base_directory + '99450-github.com-btcrit-wiki' +"/.git"
+
+    if not os.access(test_repo, os.R_OK):
+        click.echo(f"\tRepo permissions check failed for '{test_repo}'")
+        return
+    else:
+        click.echo(f"\tRepo permissions check passed")
+
 
     with DatabaseSession(logger, ctx.obj.engine) as session:
 
