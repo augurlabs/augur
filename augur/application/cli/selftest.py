@@ -186,7 +186,7 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
                 commit_changes = session.execute(query).scalars().all()
 
                 # fetch all records with this commit hash
-                click.echo(f"\t{len(commit_changes)} commit change records match this hash")
+                click.echo(f"\t{len(commit_changes)} commit change records match hash {commithash}")
                 
                 append_log_file(all_affected_rows_file, commit_changes)
 
