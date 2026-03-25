@@ -24,24 +24,23 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
 
-    try:
-        with GithubTaskManifest(logger) as manifest:
+    with GithubTaskManifest(logger) as manifest:
 
-            augur_db = manifest.augur_db
+        augur_db = manifest.augur_db
 
-            repo_id = augur_db.session.query(Repo).filter(
-                Repo.repo_git == repo_git).one().repo_id
+        repo_id = augur_db.session.query(Repo).filter(
+            Repo.repo_git == repo_git).one().repo_id
 
-            owner, repo = get_owner_repo(repo_git)
-            task_name = f"{owner}/{repo}: Message Task"
+        owner, repo = get_owner_repo(repo_git)
+        task_name = f"{owner}/{repo}: Message Task"
 
-            if full_collection:
-                core_data_last_collected = None
-            else:
-                # subtract 2 days to ensure all data is collected
-                core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+        if full_collection:
+            core_data_last_collected = None
+        else:
+            # subtract 2 days to ensure all data is collected
+            core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
-
+        try:
             if is_repo_small(repo_id):
                 message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
 
@@ -54,9 +53,9 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
             else:
                 process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected)
 
-    except ResourceGoneException as e:
-        logger.warning(f"Issues are disabled for repo {repo_git}, skipping message collection: {e}")
-        raise Ignore()
+        except ResourceGoneException as e:
+            logger.warning(f"Issues are disabled for repo {repo_git}, skipping message collection: {e}")
+            raise Ignore()
 
 
 def is_repo_small(repo_id):
