@@ -142,7 +142,7 @@ def run_selftest_repair(ctx, dry_run, output_dir, facade_dir):
 
     click.echo(f"Using repo base directory '{repo_base_directory}'")
 
-    test_repo = repo_base_directory + '99450-github.com-btcrit-wiki' +"/.git"
+    test_repo = repo_base_directory + '99450-github.com-btcrit-wiki'
 
     if not os.access(test_repo, os.R_OK):
         click.echo(f"\tRepo permissions check failed for '{test_repo}'")
