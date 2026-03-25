@@ -137,7 +137,7 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir):
             absolute_path = get_absolute_repo_path(repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
             repo_loc = (f"{absolute_path}/.git")
 
-            click.echo(f"\tChecking repo id {repo_id}, path {absolute_path}")
+            click.echo(f"\tFetching affected commits in repo id {repo_id}, path {absolute_path}...", nl=False)
             query = s.select(func.distinct(Commit.cmt_commit_hash)).where(Commit.cmt_author_name == '', Commit.repo_id == repo_id)
             unique_commit_hashes = connection.execute(query).scalars().all()
             append_log_file(affected_commits_file, unique_commit_hashes)
