@@ -5,10 +5,12 @@ from sqlalchemy.sql import text
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 
+from celery.exceptions import Ignore
+
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException, ResourceGoneException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
@@ -39,12 +41,17 @@ def collect_events(repo_git: str, full_collection: bool):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    if bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
-        collection_strategy = BulkGithubEventCollection(logger)
-    else:
-        collection_strategy = ThoroughGithubEventCollection(logger)
+    try:
+        if bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
+            collection_strategy = BulkGithubEventCollection(logger)
+        else:
+            collection_strategy = ThoroughGithubEventCollection(logger)
 
-    collection_strategy.collect(repo_git, key_auth, core_data_last_collected)
+        collection_strategy.collect(repo_git, key_auth, core_data_last_collected)
+
+    except ResourceGoneException as e:
+        logger.warning(f"Issues are disabled for repo {repo_git}, skipping event collection: {e}")
+        raise Ignore()
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
