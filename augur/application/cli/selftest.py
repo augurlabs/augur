@@ -25,7 +25,7 @@ from augur.application.db.models import Repo
 
 from ._cli_util import get_db_version
 
-from pygit2 import Repository
+from pygit2 import Repository, GitError
 
 from dotenv import load_dotenv
 
@@ -167,8 +167,10 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
             repo_loc = (f"{absolute_path}/.git")
             try:
                 lg2_repo = Repository(repo_loc)
-            except pygit2.GitError as e:
-                click.echo(f"Error opening repo: " + e)
+            except GitError as e:
+                click.echo(f"Error opening repo: ")
+                click.echo(e)
+                continue
 
             click.echo(f"\tFetching affected commits in repo id {repo_id}, path {absolute_path}...", nl=False)
             query = s.select(func.distinct(Commit.cmt_commit_hash)).where(Commit.cmt_author_name == '', Commit.repo_id == repo_id)
