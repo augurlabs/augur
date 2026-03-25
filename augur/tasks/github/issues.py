@@ -2,13 +2,14 @@ import logging
 import traceback
 from datetime import timedelta, timezone, datetime
 
+from celery.exceptions import Ignore
 from sqlalchemy.exc import IntegrityError
 
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_data_access import GithubDataAccess, ResourceGoneException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -79,6 +80,10 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
             logger.info(f"{owner}/{repo} has no issues")
 
         return total_issues
+
+    except ResourceGoneException as e:
+        logger.warning(f"Issues are disabled for repo {repo_git}, skipping issue collection: {e}")
+        raise Ignore()
 
     except Exception as e:
         logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
