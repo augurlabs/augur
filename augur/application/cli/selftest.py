@@ -171,24 +171,45 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
             unique_commit_hashes = session.execute(query).scalars().all()
             append_log_file(affected_commits_file, unique_commit_hashes)
             click.echo(len(unique_commit_hashes))
-              # TODO: save/append to list of affected commits
-              
-            # for commit in unique_commit_hashes:
-            #     click.echo(commit)
 
-            # click.echo(commit_entries)
-          
+            for commithash in unique_commit_hashes:
+                commit = lg2_repo[commithash]
+                
+                # any queries that attempt to get one row per commit are incredibly slow
+                query = s.select(Commit).where(Commit.cmt_author_name == '', Commit.repo_id == repo.repo_id, Commit.cmt_commit_hash == commithash)
+                commit_changes = session.execute(query).scalars().all()
 
+                # fetch all records with this commit hash
+                click.echo(f"\t{len(commit_changes)} commit change records match this hash")
+                
+                append_log_file(all_affected_rows_file, commit_changes)
 
-    
+                sample = commit_changes[0]
 
-    if not dry_run:
-        with ctx.obj.engine.begin() as connection:
-            pass
-        
-        # TODO, update tool_source and tool_version and collection date.
-
-        # # any queries that attempt to get one row per commit are incredibly slow
-        # query = s.select(Commit.repo_id).distinct().where(Commit.cmt_author_name.is_(None)).limit(20)
-        
-        # result = connection.execute(query).all()
+                conditions = [all((
+                    s.cmt_author_email == commit.author.email,
+                    s.cmt_committer_name == commit.committer.name,
+                    s.cmt_committer_email == commit.committer.email,
+                    s.cmt_committer_email == commit.committer.email,
+                    s.cmt_commit_hash == commithash
+                )) for s in commit_changes]
+                click.echo(f"sanity check: {all(conditions)}")
+                if all(conditions) == False:
+                    # click.echo(repr(sample))
+                    click.echo(repo.repo_git)
+                    click.echo(commithash)
+                    click.echo(f"{sample.cmt_author_email} ({sample.cmt_author_raw_email})")
+                    click.echo(commit.author.email)
+                    click.echo(sample.cmt_committer_name)
+                    click.echo(commit.committer.name)
+                    click.echo(f"{sample.cmt_committer_email} ({sample.cmt_committer_raw_email})")
+                    click.echo(commit.committer.email)
+                    click.echo(commit.message)
+                    click.echo(commit.parent_ids)
+                    click.prompt("enter any value and press enter to continue")
+                else:
+                    if not dry_run:
+                        for chng in commit_changes:
+                            chng.cmt_author_name = commit.author.name
+                            chng.tool_source = tool_source
+                            chng.tool_version = tool_version
