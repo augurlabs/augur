@@ -136,6 +136,9 @@ def run_selftest_repair(ctx, dry_run, output_dir, facade_dir):
     if not repo_base_directory.endswith("/"):
         repo_base_directory += "/"
 
+
+    click.echo(f"Using repo base directory '{repo_base_directory}'")
+
     with DatabaseSession(logger, ctx.obj.engine) as session:
 
         click.echo("\tcounting total affected rows...", nl=False)
