@@ -75,7 +75,7 @@ def run_selftest_repair(ctx, batch_size, dry_run):
 
     click.echo("Checking for data corrections to perform")
     
-    click.echo("Checking for missing commit author names...")
+    click.echo("Checking for missing commit author names (#3740)...")
 
     # This checker for missing commit author names is a necessary fixup for https://github.com/chaoss/augur/issues/3740
     # it is written as a series of queries to read data esssentially field-by-field to narrow the results down because
@@ -117,7 +117,7 @@ def run_selftest_repair(ctx, batch_size, dry_run):
             absolute_path = get_absolute_repo_path(repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
             repo_loc = (f"{absolute_path}/.git")
 
-            click.echo(f"Checking repo id {repo_id}, path {absolute_path}")
+            click.echo(f"\tChecking repo id {repo_id}, path {absolute_path}")
             query = s.select(func.distinct(Commit.cmt_commit_hash)).where(Commit.cmt_author_name == '', Commit.repo_id == repo_id)
             unique_commit_hashes = connection.execute(query).scalars().all()
             click.echo(len(unique_commit_hashes))
