@@ -21,6 +21,7 @@ from pathlib import Path
 
 # from augur.application.db.session import DatabaseSession
 from datetime import datetime
+from augur.cli import ENVVAR_PREFIX
 
 from ._cli_util import get_db_version
 
@@ -92,7 +93,7 @@ def append_log_file(file:Path, values):
 @click.option("--batch-size", default=1000, help="Set the number of records to repair in each repair operation (to avoid queries taking forever)")
 @click.option("--dry-run", is_flag=True, default=False, help="Skip the final updating of values to demonstrate what work would be done without doing it")
 @click.option("--output-dir", default=".", help="A path to the directory where output files should be written")
-@click.option("--facade-dir", default=None, help="The path to the directory where facade git clones are stored")
+@click.option("--facade-dir", default=None, help="The path to the directory where facade git clones are stored", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @test_connection
 @test_db_connection
 @with_database
