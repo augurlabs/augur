@@ -67,7 +67,26 @@ def run_selftest_report(ctx):
 def append_log_file(file:Path, values):
     mode = "w" if not file.exists() else "a"
     with file.open(mode, encoding="utf-8") as f:
-        f.writelines([str(r)+'\n' for r in values])
+        if isinstance(values[0], Commit):
+            values_transformed = []
+            for c in values:
+                v = dict(c.__dict__) 
+                del v['_sa_instance_state']
+                values_transformed.append(v)
+
+            values = values_transformed
+            
+        
+        if isinstance(values[0], dict):
+            
+            writer = csv.DictWriter(f, fieldnames=values[0].keys())
+            if mode == "w":
+                writer.writeheader()
+            for row in values:
+
+                writer.writerow(row)
+        else:
+            f.writelines([str(r)+'\n' for r in values])
 
 
 @cli.command("repair")
