@@ -197,23 +197,32 @@ def run_selftest_repair(ctx, batch_size, dry_run, output_dir, facade_dir):
                     # s.cmt_committer_email == commit.committer.email,
                     s.cmt_commit_hash == commithash
                 )) for s in commit_changes]
-                click.echo(f"sanity check: {all(conditions)}")
-                if all(conditions) == False:
-                    # click.echo(repr(sample))
-                    click.echo(repo.repo_git)
-                    click.echo(commithash)
-                    click.echo(f"{sample.cmt_author_email} ({sample.cmt_author_raw_email})")
-                    click.echo(commit.author.email)
-                    click.echo(sample.cmt_committer_name)
-                    click.echo(commit.committer.name)
-                    click.echo(f"{sample.cmt_committer_email} ({sample.cmt_committer_raw_email})")
-                    click.echo(commit.committer.email)
-                    click.echo(commit.message)
-                    click.echo(commit.parent_ids)
-                    click.prompt("enter any value and press enter to continue")
-                else:
+                # click.echo(f"sanity check: {all(conditions)}")
+                if all(conditions) == True:
                     if not dry_run:
-                        for chng in commit_changes:
-                            chng.cmt_author_name = commit.author.name
-                            chng.tool_source = tool_source
-                            chng.tool_version = tool_version
+                        query = ( s.update(Commit)
+                            .where(Commit.cmt_author_name == '', Commit.repo_id == repo.repo_id, Commit.cmt_commit_hash == commithash)
+                            .values({
+                                'cmt_author_name': commit.author.name,
+                                'tool_version': tool_version,
+                                'tool_source': tool_source,
+                            })
+                        )
+                        session.execute(query)
+                else:
+                    pass
+                    # # click.echo(repr(sample))
+                    # click.echo(repo.repo_git)
+                    # click.echo(commithash)
+                    # click.echo(f"{sample.cmt_author_email} ({sample.cmt_author_raw_email})")
+                    # click.echo(commit.author.email)
+                    # click.echo(sample.cmt_committer_name)
+                    # click.echo(commit.committer.name)
+                    # click.echo(f"{sample.cmt_committer_email} ({sample.cmt_committer_raw_email})")
+                    # click.echo(commit.committer.email)
+                    # click.echo(commit.message)
+                    # click.echo(commit.parent_ids)
+                    # click.prompt("enter any value and press enter to continue")
+                    
+            session.commit()
+                        
