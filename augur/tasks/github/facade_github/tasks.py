@@ -196,11 +196,6 @@ def insert_facade_contributors(self, repo_git):
     repo_id = repo.repo_id
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
-        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
-        collection_status = execute_session_query(query,'one')
-        last_collected_date = collection_status.facade_data_last_collected if not facade_helper.facade_contributor_full_recollect else None
-
     # Get all of the commit data's emails and names from the commit table that do not appear
     # in the contributors table or the contributors_aliases table.
 
