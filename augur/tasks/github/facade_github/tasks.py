@@ -281,7 +281,7 @@ def insert_facade_contributors(self, repo_git):
         )
         SELECT
             d.cntrb_id,
-            c.cmt_author_email AS cntrb_email
+            c.cmt_author_email AS email
         FROM
             augur_data.commits c
         INNER JOIN
