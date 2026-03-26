@@ -212,7 +212,7 @@ def insert_facade_contributors(self, repo_git):
                 commits.repo_id = :repo_id
                 AND commits.cmt_ght_author_id IS NULL
                 AND commits.cmt_author_raw_email NOT IN (
-                    SELECT email FROM unresolved_commit_emails
+                    SELECT email FROM augur_data.unresolved_commit_emails
                 )
             ORDER BY hash
     """).bindparams(repo_id=repo_id)
@@ -276,11 +276,11 @@ def insert_facade_contributors(self, repo_git):
         )
         SELECT
             d.cntrb_id,
-            d.email
+            c.cmt_author_email AS email
         FROM
             commits c
         INNER JOIN
-            deduplicated d ON c.cmt_author_raw_email = d.email
+            deduplicated d ON c.cmt_author_email = d.email
         WHERE
             c.cmt_ght_author_id IS NULL
             AND c.repo_id = :repo_id
