@@ -196,13 +196,8 @@ def insert_facade_contributors(self, repo_git):
     repo_id = repo.repo_id
     facade_helper = FacadeHelper(logger)
 
-    # Find all commits not yet linked to a contributor. The correct signal for
-    # "needs resolution" is a NULL cmt_ght_author_id — not a date window or an
-    # email-table cross-check. The old email-join approach silently skipped
-    # commits whose emails were later linked to a GitHub account, and the
-    # last_collection_date cutoff (PR #3253) made that permanent. Commits
-    # already marked unresolvable are excluded via the unresolved_commit_emails
-    # table so we don't hammer the GitHub API on known dead-ends.
+    # Find commits not yet linked to a contributor (cmt_ght_author_id IS NULL),
+    # skipping emails already marked unresolvable.
 
     logger.info(
     "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
@@ -255,12 +250,7 @@ def insert_facade_contributors(self, repo_git):
 
     logger.debug("DEBUG: Got through the new_contribs")
     
-    # Build the full email→contributor mapping by unioning all three email
-    # columns (cntrb_email, cntrb_canonical, alias_email) then deduplicating.
-    # Only target commits that are still unlinked (cmt_ght_author_id IS NULL)
-    # so we never re-process already-resolved records. Removing the
-    # last_collection_date guard means historical commits that slipped through
-    # on first pass are finally eligible for resolution.
+    # Match unlinked commits to contributors via email, canonical email, or alias.
     resolve_email_to_cntrb_id_sql = s.sql.text("""
         WITH email_to_contributor AS (
             SELECT cntrb_email AS email, cntrb_id
@@ -284,7 +274,7 @@ def insert_facade_contributors(self, repo_git):
             FROM email_to_contributor
             ORDER BY email
         )
-        SELECT DISTINCT
+        SELECT
             d.cntrb_id,
             d.email
         FROM
