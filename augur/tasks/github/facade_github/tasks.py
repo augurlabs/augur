@@ -264,9 +264,9 @@ def insert_facade_contributors(self, repo_git):
 
             UNION ALL
 
-            SELECT canonical_email AS email, cntrb_id
+            SELECT cntrb_canonical AS email, cntrb_id
             FROM augur_data.contributors
-            WHERE canonical_email IS NOT NULL
+            WHERE cntrb_canonical IS NOT NULL
 
             UNION ALL
 
