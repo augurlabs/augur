@@ -29,9 +29,7 @@ def detect_github_repo_move_core(repo_git : str) -> None:
         try:
             ping_github_for_repo_move(session, key_auth, repo, logger)
         except (RepoMovedException, RepoGoneException) as e:
-            # Collection status was already reset inside ping_github_for_repo_move.
-            # Reject (do not retry) so the slot is freed immediately and the scheduler
-            # can pick up the repo again under its updated URL on the next cycle.
+            # Status already reset in ping_github_for_repo_move; reject to free the slot.
             raise Reject(e)
 
 

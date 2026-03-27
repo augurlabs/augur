@@ -116,10 +116,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
         new_url = update_repo_with_dict(repo, repo_update_dict, logger)
 
-        # Reset the collection status so augur_collection_monitor can re-queue this
-        # repo under its new URL. Without this reset, the slot stays in COLLECTING
-        # state until the retry eventually fails, which blocks the scheduler from
-        # dispatching new work once all max_repo slots are occupied by retries.
+        # Reset status so the scheduler re-queues the repo under the new URL.
         status_field = f"{collection_hook}_status"
         task_id_field = f"{collection_hook}_task_id"
         last_collected_field = f"{collection_hook}_data_last_collected"
