@@ -116,20 +116,6 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
         new_url = update_repo_with_dict(repo, repo_update_dict, logger)
 
-        # Reset status so the scheduler re-queues the repo under the new URL.
-        status_field = f"{collection_hook}_status"
-        task_id_field = f"{collection_hook}_task_id"
-        last_collected_field = f"{collection_hook}_data_last_collected"
-
-        statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
-        collectionRecord = execute_session_query(statusQuery, 'one')
-        setattr(collectionRecord, task_id_field, None)
-        if getattr(collectionRecord, last_collected_field) is not None:
-            setattr(collectionRecord, status_field, CollectionState.SUCCESS.value)
-        else:
-            setattr(collectionRecord, status_field, CollectionState.PENDING.value)
-        session.commit()
-
         raise RepoMovedException("ERROR: Repo has moved! Resetting Collection!", new_url=new_url)
     
     #Mark as ignore if 404

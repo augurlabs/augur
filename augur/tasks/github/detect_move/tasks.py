@@ -25,11 +25,12 @@ def detect_github_repo_move_core(repo_git : str) -> None:
     with get_session() as session:
 
         #Ping each repo with the given repo_git to make sure
-        #that they are still in place. 
+        #that they are still in place.
         try:
             ping_github_for_repo_move(session, key_auth, repo, logger)
-        except (RepoMovedException, RepoGoneException) as e:
-            # Status already reset in ping_github_for_repo_move; reject to free the slot.
+        except RepoMovedException:
+            pass  # URL updated in DB; let the chain continue normally
+        except RepoGoneException as e:
             raise Reject(e)
 
 
@@ -52,5 +53,7 @@ def detect_github_repo_move_secondary(repo_git : str) -> None:
         #that they are still in place.
         try:
             ping_github_for_repo_move(session, key_auth, repo, logger, collection_hook='secondary')
-        except (RepoMovedException, RepoGoneException) as e:
+        except RepoMovedException:
+            pass  # URL updated in DB; let the chain continue normally
+        except RepoGoneException as e:
             raise Reject(e)
