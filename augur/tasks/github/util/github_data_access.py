@@ -5,7 +5,6 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 from augur.util.keys import mask_key
-import urllib.parse
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -55,24 +54,16 @@ class GithubDataAccess:
         Returns:
             str: the full URL to the specified resource.
         """
-        # using pythons url processing library this way helps handle accidental
+        # using pythons url processing library helps handle accidental
         # inclusion of query parameters in the path string, ensuring all query
         # parameters are properly encoded and escaped
 
-        input_url_parts = urllib.parse.urlsplit(path)
-        final_query_parameters = dict()
+        if not path.startswith("/"):
+            path = "/" + path
 
-        if input_url_parts.query != '':
-            final_query_parameters.update(
-                parse_qs(input_url_parts.query)
-            )
-        
-        if params != None:
-            final_query_parameters.update(params)
+        url = "https://api.github.com" + path
 
-        return urllib.parse.urlunsplit(
-            ('https', 'api.github.com', input_url_parts.path, urllib.parse.urlencode(final_query_parameters), '')
-        )
+        return self.__add_query_params(url, params or {})
 
     def get_resource_count(self, url):
 
