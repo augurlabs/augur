@@ -6,7 +6,7 @@ from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecond
 from augur.application.db.lib import get_repo_by_repo_git, get_session
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
-from celery.exceptions import Retry, Reject
+from celery.exceptions import Reject
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -28,12 +28,10 @@ def detect_github_repo_move_core(repo_git : str) -> None:
         #that they are still in place. 
         try:
             ping_github_for_repo_move(session, key_auth, repo, logger)
-        except RepoMovedException as e:
-            if e.new_url is not None:
-                raise Retry(e.new_url)
-            else:
-                raise Reject(e)
-        except RepoGoneException as e:
+        except (RepoMovedException, RepoGoneException) as e:
+            # Collection status was already reset inside ping_github_for_repo_move.
+            # Reject (do not retry) so the slot is freed immediately and the scheduler
+            # can pick up the repo again under its updated URL on the next cycle.
             raise Reject(e)
 
 
@@ -53,5 +51,8 @@ def detect_github_repo_move_secondary(repo_git : str) -> None:
     with get_session() as session:
 
         #Ping each repo with the given repo_git to make sure
-        #that they are still in place. 
-        ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='secondary')
+        #that they are still in place.
+        try:
+            ping_github_for_repo_move(session, key_auth, repo, logger, collection_hook='secondary')
+        except (RepoMovedException, RepoGoneException) as e:
+            raise Reject(e)
