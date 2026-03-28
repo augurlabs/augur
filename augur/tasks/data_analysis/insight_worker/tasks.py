@@ -106,7 +106,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
                 AND ri_date < :min_date
     """)
 
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         result = conn.execute(delete_record_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     logger.info("Deleting out of date data points ...\n")

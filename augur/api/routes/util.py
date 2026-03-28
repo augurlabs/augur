@@ -27,7 +27,7 @@ def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         ORDER BY rg_name
     """)
 
-    with current_app.engine.begin() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(repoGroupsSQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
