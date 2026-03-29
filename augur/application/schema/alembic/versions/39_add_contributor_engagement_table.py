@@ -1,7 +1,7 @@
 """Add contributor_engagement table
 
-Revision ID: 35
-Revises: 33
+Revision ID: 39
+Revises: 38
 Create Date: 2025-07-26 10:00:00.000000
 
 """
@@ -11,8 +11,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "35"
-down_revision = "33"
+revision = "39"
+down_revision = "38"
 branch_labels = None
 depends_on = None
 
