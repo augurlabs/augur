@@ -71,21 +71,38 @@ def test_ping_200_returns_none(mock_hit):
 @patch("augur.tasks.github.detect_move.tasks.get_session")
 @patch("augur.tasks.github.detect_move.tasks.get_repo_by_repo_git")
 @patch("augur.tasks.github.detect_move.tasks.ping_github_for_repo_move")
-def test_core_task_retries_with_new_url_on_move(mock_ping, mock_get_repo, mock_get_session, mock_key_auth):
+def test_core_task_cancels_chain_and_resets_status_on_move(mock_ping, mock_get_repo, mock_get_session, mock_key_auth):
+    """
+    When a repo has moved, the task must:
+    1. Set request.chain = None so downstream tasks (queued with old URL) are cancelled.
+    2. Reset core_status to PENDING so the scheduler re-collects with the new URL.
+    3. Return cleanly (no exception).
+    """
     from augur.tasks.github.detect_move.tasks import detect_github_repo_move_core
+    from augur.tasks.util.collection_state import CollectionState
 
     new_url = "https://github.com/new-owner/new-repo"
     mock_ping.side_effect = RepoMovedException("moved", new_url=new_url)
     mock_get_repo.return_value = _make_repo()
-    mock_get_session.return_value = _session_mock()
+
+    mock_status = MagicMock()
+    mock_moved_repo = MagicMock()
+    mock_moved_repo.collection_status = [mock_status]
+
+    mock_session = MagicMock()
+    mock_session.query.return_value.filter.return_value.first.return_value = mock_moved_repo
+    mock_get_session.return_value.__enter__ = MagicMock(return_value=mock_session)
+    mock_get_session.return_value.__exit__ = MagicMock(return_value=False)
 
     task_self = MagicMock()
-    task_self.retry = MagicMock(side_effect=Exception("retry_called"))
+    task_self.request = MagicMock()
 
-    with pytest.raises(Exception, match="retry_called"):
-        detect_github_repo_move_core.__wrapped__(task_self, "https://github.com/old-owner/old-repo")
+    result = detect_github_repo_move_core.__wrapped__(task_self, "https://github.com/old-owner/old-repo")
 
-    task_self.retry.assert_called_once_with(args=[new_url], countdown=0, max_retries=1)
+    assert task_self.request.chain is None
+    assert mock_status.core_status == CollectionState.PENDING.value
+    assert mock_status.core_task_id is None
+    assert result is None
 
 
 @patch("augur.tasks.github.detect_move.tasks.GithubRandomKeyAuth")
