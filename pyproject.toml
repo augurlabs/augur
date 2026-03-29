@@ -19,42 +19,31 @@ classifiers = [
     "Programming Language :: Python :: 3.10"
 ]
 dependencies = [
-    "alembic==1.8.1",
+    "alembic>=1.17.1",
     "Beaker==1.11.0",
-    "blinker==1.4",
-    "bokeh==2.0.2",
     "boto3==1.17.57",
     "bs4==0.0.1",
-    "celery==5.2.7",
-    "click==8.0.3",
-    "cloudpickle>=0.2.2",
+    "celery~=5.5",
+    "click~=8.1",
     "coloredlogs==15.0",
-    "dask>=2021.6.2",
-    "distributed>=2021.03.0",
-    "dnspython==2.6.1",
     "emoji==1.2.0",
-    "eventlet==0.35.2",
     "flask==2.0.2",
     "flask-cors==4.0.1",
     "flask-login==0.5.0",
-    "flask-wtf==1.0.0",
     "flask_graphql",
     "flower==2.0.1",
-    "fsspec>=0.6.0",
     "gensim>=4.2.0",
     "graphene",
     "graphene_sqlalchemy",
     "gunicorn==22.0.0",
     "h5py==3.10.0",
     "httpx==0.23.0",
-    "itsdangerous==2.0.1",
     "Jinja2~=3.0.3",
     "joblib==1.2.0",
     "keras>=2.15.0",
     "keras-preprocessing",
     "matplotlib>=3.5.1",
     "mdpdf==0.0.18",
-    "mistune",
     "nltk==3.6.6",
     "numpy==1.26.0",
     "pandas==1.5.3",
@@ -62,31 +51,26 @@ dependencies = [
     "protobuf<3.22",
     "psutil==5.8.0",
     "psycopg2-binary==2.9.9",
-    "pylint==2.15.5",
     "python-crfsuite>=0.9.8",
+    "python-dotenv>=1.2.1",
     "pyYaml",
     "redis==4.3.3",
-    "requests==2.32.0",
     "scikit-image==0.19.1",
     "scikit-learn==1.5.0",
+    "requests~=2.32",
     "scipy>=1.10.0,<1.13.0",
-    "seaborn==0.11.1",
-    "selenium==3.141.0",
-    "sendgrid",
-    "six==1.15.0",
     "sklearn==0.0",
     "sklearn-crfsuite>=0.3.6",
     "slack==0.0.2",
     "SQLAlchemy==2.0.22",
-    "tabulate==0.8.9",
     "tenacity==8.3.0",
     "tensorflow==2.15.0",
     "textblob==0.15.3",
     "textual>=0.73.0",
-    "toml",
+    "tomli>=2.2.1 ; python_full_version < '3.11'",
     "toolz>=0.8.2",
     "tornado==6.4.1",
-    "typing-extensions==4.7.1",
+    "typing-extensions>=4.7",
     "Werkzeug~=2.0.0",
     "xgboost==3.0.2",
     "xlrd==2.0.1",
@@ -95,12 +79,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "tox==3.24.4",
-    "pytest==6.2.5",
-    "toml>=0.10.2",
-    "ipdb==0.13.9",
-    {include-group = "docs"},
+    { include-group = "lint" },
+    { include-group = "test" },
+    { include-group = "debug" },
+    { include-group = "docs" },
 ]
+lint = [
+    "pylint",
+    "mypy>=1.18.2",
+    "pylint==2.15.5",
+    "types-requests>=2.31.0.6",
+    "types-pyyaml>=6.0.12.20250915",
+    "types-python-dateutil>=2.9.0.20251008",
+    "types-toml>=0.10.8.20240310",
+]
+test = ["pytest"]
+debug = ["ipdb==0.13.9"]
 docs = [
     "docutils==0.20.1",
     # setuptools is needed for pkg_resources due to sphinxcontrib-redoc
@@ -149,3 +143,29 @@ constraint-dependencies = [
     # https://docs.python.org/3.10/whatsnew/3.10.html#removed
     "graphql-server-core>1.1.1",
 ]
+
+
+
+[tool.pytest.ini_options]
+addopts = "-ra -s"
+testpaths = [
+    "tests/test_classes",
+    "tests/test_application/test_cli/test_csv_utils.py",
+    # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
+    # "tests/test_metrics",
+    # "tests/test_tasks",
+    # "tests/test_application",
+    # "tests/test_workers",
+    # "tests/test_workers/worker_persistence/",
+    # "tests/test_routes/runner.py"
+]
+
+[tool.mypy]
+files = ['augur/application/db/*.py']
+ignore_missing_imports = true
+follow_imports = "skip"
+disallow_untyped_defs = false
+exclude_gitignore = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]

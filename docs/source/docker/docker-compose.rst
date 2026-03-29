@@ -26,7 +26,7 @@ This section of the documentation details how to use Augur's Docker Compose conf
 
 .. warning::
 
-    Don't forget to provide your external database credentials in a file called ``.env`` file. Make sure the following environment variables are specified.
+    Don't forget to provide your external database credentials in a file called ``.env`` file. Make sure all the following environment variables are specified, keep placeholder values if you don't need some of them.
     Don't specify AUGUR_DB if you want the docker database to be used.
 
     Example .env:

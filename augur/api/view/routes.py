@@ -221,13 +221,9 @@ report page:
 """
 @app.route('/repos/views/repo/<id>')
 def repo_repo_view(id):
-    # For some reason, there is no reports definition (shouldn't be possible)
-    if reports is None:
-        return render_message("Report Definitions Missing", "You requested a report for a repo on this instance, but a definition for the report layout was not found.")
-
     repo = Repo.get_by_id(db_session, id)
 
-    return render_module("repo-info", reports=reports.keys(), images=reports, title="Repo", repo=repo, repo_id=id)
+    return render_module("repo-info", title="Repo", repo=repo, repo_id=id)
 
 """ ----------------------------------------------------------------
 default:

@@ -27,13 +27,18 @@ def clean_dict(d):
     return {k: ("" if v is None else v) for k, v in d.items()}
 
 
-# Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-# Returns None on failure.
-# NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
-# No functional change in this function body; logic preserved fully.
-# This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
-
+# deprecated in favor of GithubDataAcess.get_resource()
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
+    """Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
+    
+    NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
+    No functional change in this function body; logic preserved fully.
+    This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
+
+
+    Returns:
+        None on failure. Dict on success
+    """
     attempts = 0
     response_data = None
     success = False
@@ -138,28 +143,17 @@ def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
     return url
 
 
-# Try to construct the best url to ping GitHub's API for a username given a full name.
-def create_endpoint_from_name(contributor):
-    # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
-    name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
-
-    # Deal with case where name is one word or none.
-    if len(contributor[name_field].split()) < 2:
-        raise ValueError
-    cmt_cntrb = {
-        'fname': contributor[name_field].split()[0],
-        # Pythonic way to get the end of a list so that we truely get the last name.
-        'lname': contributor[name_field].split()[-1]
-    }
-    url = 'https://api.github.com/search/users?q=fullname:{}+{}'.format(
-        cmt_cntrb['fname'], cmt_cntrb['lname'])
-
-    return url
-
 def insert_alias(logger, contributor, email):
-    # Insert cntrb_id and email of the corresponding record into the alias table
-    # Another database call to get the contributor id is needed because it's an autokeyincrement accessed by multiple workers
-    # Same principle as enrich_cntrb_id method.
+    """Insert cntrb_id and email of the corresponding record into the alias table.
+    Another database call to get the contributor id is needed because it's an
+    autokeyincrement accessed by multiple workers. Same principle as enrich_cntrb_id method.
+    Args:
+        logger: Logger instance.
+        contributor (dict): Contributor record containing 'gh_user_id' and optionally 'cntrb_canonical'.
+        email (str): Email address to create the alias for.
+    Raises:
+        LookupError: If the contributor cannot be found in the database by gh_user_id.
+    """
 
     contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
 
@@ -196,10 +190,13 @@ def insert_alias(logger, contributor, email):
 
     return
 
-# Takes the user data from the endpoint as arg
-# Updates the alias table if the login is already in the contributor's table with the new email.
-# Returns whether the login was found in the contributors table
-def resolve_if_login_existing(logger, contributor):
+def resolve_if_login_existing(logger, contributor) -> bool:
+    """Takes the user data from the endpoint as arg.
+    Updates the alias table if the login is already in the contributor's table with the new email.
+
+    Returns:
+        bool: Whether the login was found in the contributors table.
+    """
     # check if login exists in contributors table
     select_cntrbs_query = s.sql.text("""
         SELECT cntrb_id from contributors
@@ -262,13 +259,23 @@ def update_contributor(self, cntrb, max_attempts=3):
         attempts += 1
 """
 
-# Try every distinct email found within a commit for possible username resolution.
-# Add email to garbage table if can't be resolved.
-#   \param contributor is the raw database entry
-#   \return A dictionary of response data from github with potential logins on success.
-#           None on failure
 
-def fetch_username_from_email(logger, auth, commit):
+
+def fetch_username_from_email(logger, auth, commit) -> dict | None:
+    """Try every distinct email found within a commit for possible username resolution.
+    Add email to garbage table if can't be resolved.
+    
+    #   \param contributor is the raw database entry
+ 
+    Args:
+        logger (_type_): logging instance to use
+        auth (_type_): Keymanager instance to use for auth
+        commit (_type_): _description_
+
+    Returns:
+        dict: A dictionary of response data from github with potential logins on success.
+#           None on failure
+    """
 
     # Default to failed state
     login_json = None
@@ -306,47 +313,29 @@ def fetch_username_from_email(logger, auth, commit):
 
     return login_json
 
-# Method to return the login given commit data using the supplemental data in the commit
-#   -email
-#   -name
+
 def get_login_with_supplemental_data(logger, auth, commit_data):
+    """Return the login given commit data using the supplemental data in the commit (email).
+
+    Args:
+        logger: Logger instance.
+        auth: GithubRandomKeyAuth instance for API authentication.
+        commit_data (dict): Commit record containing 'email_raw'.
+
+    Returns:
+        str: GitHub login username on success. None if unresolved.
+    """
 
     # Try to get login from all possible emails
     # Is None upon failure.
     login_json = fetch_username_from_email(logger,auth,commit_data)
 
-    # Check if the email result got anything, if it failed, place in unresolved and try a name search.
-    if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        
-        unresolved = {
-            "email": commit_data['email_raw'],
-            "name": commit_data['name'],
-        }
-        logger.debug(f"Inserting data to unresolved: {unresolved}")
-
-        try:
-            
-            unresolved_natural_keys = ['email']
-            bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
-        except Exception as e:
-            logger.error(
-                f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
-
-        logger.warning(
-            "Could not resolve the username from the email. Trying a name only search...")
-        try:
-            url = create_endpoint_from_name(commit_data)
-        except Exception as e:
-            logger.warning(
-                f"Couldn't resolve name url with given data. Reason: {e}")
-            return None
-        
-        login_json = GithubDataAccess(auth, logger, "search").get_resource(url)
-
     # total_count is the count of username's found by the endpoint.
+    # This Checks if the email result got anything.
+    # If it fails, dont place it in unresolved yet as we may add more steps later
     if login_json is None or 'total_count' not in login_json:
         logger.error(
-            "Search query returned an empty response, moving on...\n")
+            "Search query returned an empty response. Could not resolve the username from the email. Moving on...\n")
         return None
     if login_json['total_count'] == 0:
         logger.error(

@@ -43,7 +43,7 @@ function get_github_api_key() {
     echo
     echo "Please provide a valid GitHub API key."
     echo "For more information on how to create the key, visit:"
-    echo "https://oss-augur.readthedocs.io/en/dev/getting-started/installation.html#backend"
+    echo "https://oss-augur.readthedocs.io/en/main/getting-started/installation.html#backend"
     echo "** This is required for Augur to gather data ***"
     read -p "GitHub API Key: " github_api_key
     blank_confirm github_api_key
@@ -63,7 +63,7 @@ function get_gitlab_api_key() {
     echo
     echo "Please provide a valid GitLab API key."
     echo "For more information on how to create the key, visit:"
-    echo "https://oss-augur.readthedocs.io/en/dev/getting-started/installation.html#backend"
+    echo "https://oss-augur.readthedocs.io/en/main/getting-started/installation.html#backend"
     echo "** This is required for Augur to gather data ***"
     read -p "GitLab API Key: " gitlab_api_key
     blank_confirm gitlab_api_key

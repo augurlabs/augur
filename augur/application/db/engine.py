@@ -10,7 +10,7 @@ from sqlalchemy.engine import Engine
 from augur.application.db.util import catch_operational_error
 
 
-def parse_database_string(db_string: str) -> str:
+def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:
     """Parse database string into the following components:
         username, password, host, port, database 
     """

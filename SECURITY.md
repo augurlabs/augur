@@ -2,38 +2,26 @@
 
 ## Supported Versions
 
-These versions of Augur are currently supported with security updates.
+We currently provide security updates for the latest tagged release of Augur.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.50.3   | :white_check_mark: |
-| 0.50.2   | :white_check_mark: |
-| 0.50.1   | :white_check_mark: |
-| 0.50.0   | :white_check_mark: |
-| 0.44.5   | :white_check_mark: |
-| 0.44.3   | :white_check_mark: |
-| 0.44.2   | :white_check_mark: |
-| 0.44.1   | :white_check_mark: |
-| 0.44.0   | :white_check_mark: |
-| 0.27.x   | :x: |
-| 0.26.x   | :x: |
-| 0.25.x   | :x: |
-| 0.24.x   | :x: |
-| 0.23.x   | :x: |
-| 0.21.x   | :x: |
-| 0.20.x   | :x: |
-| 0.19.x   | :x: |
-| 0.18.x   | :x: |
-| 0.17.x   | :x: |
-| 0.16.x   | :x: |
-| 0.15.x   | :x: |
-| 0.14.x   | :x: |
-| 0.13.x   | :x: |
-| 0.12.x   | :x: |
-| 0.11.x   | :x:                |
-| 0.10.x   | :x: |
-| < 0.10   | :x:                |
+Older versions are not actively supported. In exceptional circumstances, maintainers may choose to backport fixes on a case-by-case basis.
+
 
 ## Reporting a Vulnerability
 
-Please report vulnerabilities using GitHub Issues  
+**IMPORTANT: Do not report security vulnerabilities using public GitHub Issues or public discussions.**
+
+### Private Disclosure Process
+
+If you discover a security vulnerability in Augur, please report it privately by opening a [New Private Vulnerability Report](https://github.com/chaoss/augur/security/advisories/new). Please fill out the provided advisory template to ensure we have all the details (Impact, Reproduction Steps, and Affected Versions) needed to investigate.
+
+### Responsible Disclosure Guidelines
+
+We do our best to follow responsible disclosure practices:
+
+- **Credit**: We will acknowledge your discovery in security release notes (unless you prefer anonymity)
+- **Coordination**: We will work with you to coordinate the disclosure and release timeline based on our capacity to resolve the issue
+- **Communication**: We aim to remain communicative and keep your ticket updated with the status so you know what to expect
+- **No Public Issues**: Please avoid creating public GitHub issues pull requests, branches, or forks for developing fixes to security vulnerabilities unless told otherwise. All of these can leak the existence of the vulnerability before it is fully fixed.
+
+Thank you for helping keep Augur secure!  

@@ -27,7 +27,7 @@ jobs:
           reporter: github-pr-review
           level: warning
           glob_pattern: "**/*.py"
-          filter_mode: "file"
+          filter_mode: "diff_context"
 
   misspell:
     name: runner / misspell

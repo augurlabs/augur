@@ -21,5 +21,6 @@ rm -rf logs/
 echo "Removing build files..."
 find . -wholename build -delete
 find . -wholename dist -delete
+# .tox is no longer used, but we keep this here to clean up old environments
 rm -rf .tox/
 echo "Done cleaning!"

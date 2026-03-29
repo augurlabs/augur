@@ -55,8 +55,20 @@ jobs:
     name: End-to-end test (Docker)
     runs-on: ubuntu-latest
     steps:
+      - name: Remove unnecessary files from the base image
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Extract project version
+        id: version
+        run: |
+          VERSION=$(python -c "exec(open('metadata.py').read()); print(__version__)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -67,6 +79,7 @@ jobs:
         with:
           context: .
           file: ./docker/database/Dockerfile
+          build-args: VERSION=${{ steps.version.outputs.version }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
           cache-from: type=gha,scope=container-database
@@ -78,6 +91,7 @@ jobs:
         with:
           context: .
           file: ./docker/keyman/Dockerfile
+          build-args: VERSION=${{ steps.version.outputs.version }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
           cache-from: type=gha,scope=container-keyman
@@ -89,6 +103,7 @@ jobs:
         with:
           context: .
           file: ./docker/rabbitmq/Dockerfile
+          build-args: VERSION=${{ steps.version.outputs.version }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
           cache-from: type=gha,scope=container-rabbitmq
@@ -100,6 +115,7 @@ jobs:
         with:
           context: .
           file: ./docker/backend/Dockerfile
+          build-args: VERSION=${{ steps.version.outputs.version }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
           cache-from: type=gha,scope=container-backend

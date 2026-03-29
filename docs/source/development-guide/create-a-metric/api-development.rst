@@ -133,10 +133,6 @@ There is also, generally, a block in a standard metric for pulling data by a rep
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results
 
-Existing Visualization Metrics Files:
---------------------------------------------
-1. augur/routes/contributor_reports.py
-2. augur/routes/pull_request_reports.py
 
 Existing Metrics Files:
 --------------------------------------------

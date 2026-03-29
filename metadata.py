@@ -5,8 +5,10 @@ __url__ = "https://github.com/chaoss/augur"
 
 __short_description__ = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 
-__version__ = "0.89.3"
-__release__ = "v0.89.3 (Midnight Sun)"
+__version__ = "0.92.0"
+__release__ = "v0.92.0 (Paladin Penguin)"
+__author__ = "Augur Team"
+__author_email__ = "outdoors@acm.org"
 
 __license__ = "MIT"
-__copyright__ = "University of Missouri, University of Nebraska-Omaha, CHAOSS, Sean Goggins, Brian Warner & Augurlabs 2025"
+__copyright__ = "University of Missouri, Derek Howard, Sean Goggins, Augurlabs 2025"

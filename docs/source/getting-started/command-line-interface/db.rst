@@ -78,14 +78,14 @@ Example usage\:
 .. code-block:: bash
 
   # contents of repos.csv
-  10,https://github.com/chaoss/augur.git
-  10,https://github.com/chaoss/grimoirelab.git
-  20,https://github.com/chaoss/wg-evolution.git
-  20,https://github.com/chaoss/wg-risk.git
-  20,https://github.com/chaoss/wg-common.git
-  20,https://github.com/chaoss/wg-value.git
-  20,https://github.com/chaoss/wg-diversity-inclusion.git
-  20,https://github.com/chaoss/wg-app-ecosystem.git
+  https://github.com/chaoss/augur.git,10
+  https://github.com/chaoss/grimoirelab.git,10
+  https://github.com/chaoss/wg-evolution.git,20
+  https://github.com/chaoss/wg-risk.git,20
+  https://github.com/chaoss/wg-common.git,20
+  https://github.com/chaoss/wg-value.git,20
+  https://github.com/chaoss/wg-diversity-inclusion.git,20
+  https://github.com/chaoss/wg-app-ecosystem.git,20
 
   # to add repos to the database
   $ augur db add-repos repos.csv

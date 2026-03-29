@@ -1,5 +1,7 @@
 import os
-import json, random, time
+import json
+import random
+import time
 
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout, InvalidRequest
 
@@ -28,11 +30,24 @@ else:
     conn = get_redis_connection()
 
 class KeyOrchestrator:
+    """Central API key management server for distributed workers.
+
+    Manages three key pools per platform:
+    - fresh_keys: Available for assignment to workers
+    - expired_keys: Rate-limited keys with refresh timestamps
+    - invalid_keys: Permanently bad keys (never refreshed)
+
+    Listens on two Redis pub/sub channels:
+    - ANNOUNCE: Admin operations (PUBLISH, UNPUBLISH, LIST_*, SHUTDOWN)
+    - REQUEST: Worker operations (NEW, EXPIRE, INVALIDATE)
+
+    Single-threaded process that handles all key requests synchronously.
+    """
     def __init__(self) -> None:
 
         self.stdin = conn.pubsub(ignore_subscribe_messages = True)
         self.logger = logger
-        
+
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
             # IE: self.ANNOUNCE = "augur-oauth-announce"
@@ -43,7 +58,13 @@ class KeyOrchestrator:
         self.expired_keys: dict[str, dict[str, int]] = {}
         self.invalid_keys: dict[str, set[str]] = {}
 
-    def publish_key(self, key, platform):
+    def publish_key(self, key: str, platform: str) -> None:
+        """Add a key to the fresh pool for the given platform.
+
+        Args:
+            key: API key string
+            platform: Platform identifier (e.g., 'github_rest')
+        """
         if platform not in self.fresh_keys:
             self.fresh_keys[platform] = [key]
             self.expired_keys[platform] = {}
@@ -51,27 +72,45 @@ class KeyOrchestrator:
         else:
             self.fresh_keys[platform].append(key)
 
-    def unpublish_key(self, key, platform):
+    def unpublish_key(self, key: str, platform: str) -> None:
+        """Remove a key from circulation (fresh or expired pool).
+
+        Args:
+            key: API key string
+            platform: Platform identifier
+        """
         if platform not in self.fresh_keys:
             return
-        
+
         if key in self.fresh_keys[platform]:
             self.fresh_keys[platform].remove(key)
         elif key in self.expired_keys[platform]:
             self.expired_keys[platform].pop(key)
 
-    def expire_key(self, key, platform, timeout):
-        if not platform in self.fresh_keys or not key in self.fresh_keys[platform]:
-            return
-        
-        self.fresh_keys[platform].remove(key)
+    def expire_key(self, key: str, platform: str, timeout: int) -> None:
+        """Move key from fresh to expired pool with refresh timestamp.
 
+        Args:
+            key: API key string
+            platform: Platform identifier
+            timeout: Unix timestamp when key becomes fresh again
+        """
+        if platform not in self.fresh_keys or key not in self.fresh_keys[platform]:
+            return
+
+        self.fresh_keys[platform].remove(key)
         self.expired_keys[platform][key] = timeout
 
-    def invalidate_key(self, key, platform):
-        if not platform in self.fresh_keys:
+    def invalidate_key(self, key: str, platform: str) -> None:
+        """Permanently invalidate a key (typically due to 401 response).
+
+        Args:
+            key: API key string
+            platform: Platform identifier
+        """
+        if platform not in self.fresh_keys:
             return
-        
+
         if key in self.fresh_keys[platform]:
             self.fresh_keys[platform].remove(key)
             self.logger.debug("Invalidating fresh key")
@@ -83,7 +122,8 @@ class KeyOrchestrator:
 
         self.invalid_keys[platform].add(key)
 
-    def refresh_keys(self):
+    def refresh_keys(self) -> None:
+        """Move expired keys back to fresh pool if their timeout has passed."""
         curr_time = time.time()
 
         for platform in self.expired_keys:
@@ -97,27 +137,40 @@ class KeyOrchestrator:
                 self.fresh_keys[platform].append(key)
                 self.expired_keys[platform].pop(key)
 
-    def new_key(self, platform):
-        if not platform in self.fresh_keys:
+    def new_key(self, platform: str) -> str | None:
+        """Get a random fresh key for the platform, or raise WaitKeyTimeout.
+
+        Args:
+            platform: Platform identifier
+
+        Returns:
+            Random key from fresh pool, or None if no keys published
+
+        Raises:
+            InvalidRequest: If platform doesn't exist
+            WaitKeyTimeout: If no fresh keys available (includes wait duration)
+        """
+        if platform not in self.fresh_keys:
             raise InvalidRequest(f"Invalid platform: {platform}")
-        
+
         if not len(self.fresh_keys[platform]):
             if not len(self.expired_keys[platform]):
                 self.logger.warning(f"Key was requested for {platform}, but none are published")
                 return
-            
-            min = 0
-            for key, timeout in self.expired_keys[platform].items():
-                if not min or timeout < min:
-                    min = timeout
 
-            delta = int(min - time.time())
+            min_timeout = 0
+            for _, timeout in self.expired_keys[platform].items():
+                if not min_timeout or timeout < min_timeout:
+                    min_timeout = timeout
+
+            delta = int(min_timeout - time.time())
 
             raise WaitKeyTimeout(delta + 5 if delta > 0 else 5)
-        
+
         return random.choice(self.fresh_keys[platform])
 
-    def run(self):
+    def run(self) -> None:
+        """Main event loop - listens for Redis pub/sub messages and processes requests."""
         self.logger.info("Ready")
         for msg in self.stdin.listen():
             try:
@@ -140,12 +193,9 @@ class KeyOrchestrator:
                 self.logger.exception(e)
                 continue
             
-            """ For performance reasons:
-            
-                Instead of dynamically checking that the
-                given channel matches one that we're
-                listening for, just check against each
-                channel that we have actions prepared for.
+            """For performance reasons: Instead of dynamically checking that the
+            given channel matches one that we're listening for, just check against each
+            channel that we have actions prepared for.
             """
             if channel == self.ANNOUNCE:
                 if "requester_id" in request:
@@ -174,7 +224,7 @@ class KeyOrchestrator:
                         return
                 except KeyboardInterrupt:
                     break
-                except Exception as e:
+                except Exception:
                     # This is a bare exception, because we don't really care why failure happened
                     self.logger.exception("Error during ANNOUNCE")
                     continue
@@ -197,12 +247,12 @@ class KeyOrchestrator:
                 except KeyboardInterrupt:
                     break
                 except WaitKeyTimeout as w:
-                    timeout = w.tiemout_seconds
+                    timeout = w.timeout_seconds
                     conn.publish(stdout, json.dumps({
                         "wait": timeout
                     }))
                     continue
-                except Exception as e:
+                except Exception:
                     # This is a bare exception, because we don't really care why failure happened
                     self.logger.exception("Error during REQUEST")
                     continue

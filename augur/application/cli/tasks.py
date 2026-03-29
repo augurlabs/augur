@@ -13,8 +13,11 @@ import time
 
 from augur import instance_id
 from augur.application.logs import AugurLogger
-from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.backend import clear_rabbitmq_messages, raise_open_file_limit
+from augur.application.config import AugurConfig
+from augur.application.db.session import DatabaseSession
+from augur.application.cli import test_connection, test_db_connection
+from augur.application.cli._cli_util import clear_rabbitmq_messages, raise_open_file_limit
+
 
 logger = AugurLogger("augur", reset_logfiles=False).get_logger()
 
@@ -33,10 +36,18 @@ def start():
     scheduling_worker_process = None
     core_worker_process = None
     secondary_worker_process = None
+    
+    
+    with DatabaseSession(logger) as session:
+        config = AugurConfig(logger, session)
+        core_count = config.get_value("Celery", "core_worker_count")
+        secondary_count = config.get_value("Celery", "secondary_worker_count")
+       
 
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=90 -n core:{uuid.uuid4().hex}@%h"
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_count} -n core:{uuid.uuid4().hex}@%h"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+
     
     scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
     core_worker_process = subprocess.Popen(core_worker.split(" "))

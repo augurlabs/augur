@@ -15,3 +15,4 @@ This is the development guide for Augur. See our `Contributing to Augur <https:/
    cli
    testing/toc
    configuration-file-reference
+   tech-breakdown

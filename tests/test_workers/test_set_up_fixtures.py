@@ -100,7 +100,7 @@ def database_connection():
 # Define a dummy worker class that gets the methods we need without running super().__init__
 
 
-class DummyPersistance(Persistant):
+class DummyPersistence(Persistent):
     def __init__(self, database_connection):
         self.db = database_connection
         self.logger = logging.getLogger()
@@ -127,7 +127,7 @@ class DummyFullWorker(ContributorInterfaceable):
 
         self.platform = "github"
         # first set up logging.
-        self._root_augur_dir = Persistant.ROOT_AUGUR_DIR
+        self._root_augur_dir = Persistent.ROOT_AUGUR_DIR
         self.augur_config = AugurConfig(self._root_augur_dir)
 
         # Get default logging settings
@@ -146,7 +146,7 @@ class DummyFullWorker(ContributorInterfaceable):
         self.tool_version = '\'1.0.1\''
         self.data_source = '\'Worker test Data\''
 
-    # This mirros the functionality of the definition found in worker_persistance to make
+    # This mirrors the functionality of the definition found in worker_persistence to make
     # github related function calls much much easier to test.
     def initialize_database_connections(self):
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(

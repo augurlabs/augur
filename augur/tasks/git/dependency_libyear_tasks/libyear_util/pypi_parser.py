@@ -1,6 +1,11 @@
 import re, os
 import json
-import toml     
+import sys
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+   
 import logging
 import yaml
 
@@ -93,15 +98,13 @@ def map_dependencies_pipfile(packages, type):
 
 
 #def parse_pipfile(file_handle):
-#    manifest = toml.load(file_handle)
+#    manifest = tomllib.load(file_handle)
 #    return map_dependencies_pipfile(manifest['packages'],'runtime') + #map_dependencies_pipfile(manifest['dev-packages'], 'develop')
 ## Erro handling Means that the parse_pipfile(...) old function is assuming the presence of a dev-packages key in the parsed Pipfile, but that key does not exist in some cases.
 
 def parse_pipfile(file_handle):
-    import toml
-
     try:
-        manifest = toml.load(file_handle)
+        manifest = tomllib.load(file_handle)
     except Exception as e:
         logging.warning(f"Failed to parse Pipfile: {getattr(file_handle, 'name', 'unknown')}, error: {e}")
         return []
@@ -154,8 +157,8 @@ def parse_setup_py(file_handle):
 def parse_poetry(file_handle, repo_id=None, path=None):
     file_name = getattr(file_handle, 'name', 'unknown')
     try:
-        manifest = toml.load(file_handle)
-    except toml.TomlDecodeError as e:
+        manifest = tomllib.load(file_handle)
+    except tomllib.TomlDecodeError as e:
         logging.warning(f"[Repo ID: {repo_id}] Skipping malformed TOML file: {file_name} at {path}, error: {e}")
         return []
     except Exception as e:
@@ -172,7 +175,7 @@ def parse_poetry(file_handle, repo_id=None, path=None):
 
 
 def parse_poetry_lock(file_handle):
-    manifest = toml.load(file_handle)
+    manifest = tomllib.load(file_handle)
     deps = list()
     group = 'runtime'
     for package in manifest['package']:

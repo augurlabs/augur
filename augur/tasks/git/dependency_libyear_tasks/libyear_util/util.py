@@ -111,68 +111,72 @@ def get_deps_libyear_data(path, logger):
             #NOTE: Add new if for new package parser
             if dependency['package'] == 'PYPI':
                 data = get_pypi_data(dependency['name'])
+                if not data:
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not find package on PYPI.")
+                    continue
+                    
                 try:
                     current_version = sort_dependency_requirement(dependency,data)
                 except (KeyError, TypeError) as e:
-                    logger.error(f"Could not get current version of dependency for path {path}.\n  Dependency: {dependency}")
-                    current_version = None
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not resolve current version requirement: {dependency['requirement']}")
+                    continue
+
+                if not current_version:
+                    logger.warning(f"Skipping dependency {dependency['name']} - current version is null or unspecified.")
+                    continue
+
                 try:
                     latest_version = get_latest_version(data)
-                    
-                except KeyError:
-                    logger.error(f"Could not get current version of dependency for path {path}.\n  Dependency: {dependency}")
-                    latest_version = None
+                except (KeyError, TypeError):
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not get latest version from PYPI.")
+                    continue
                 
+                if not latest_version:
+                    logger.warning(f"Skipping dependency {dependency['name']} - latest version is null.")
+                    continue
+
                 try:
-                    if latest_version:
-                        latest_release_date = get_release_date(data, latest_version,logger)
-                    else:
-                        latest_release_date = None
+                    latest_release_date = get_release_date(data, latest_version, logger)
+                    current_release_date = get_release_date(data, current_version, logger)
                 except KeyError:
-                    logger.error(f"Could not get current date of dependency for path {path} with version {latest_version}.\n  Dependency: {dependency}")
-                    latest_release_date = None
-                
-                if current_version:
-                    current_release_date = get_release_date(data, current_version,logger)
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not find release dates for version {current_version} or {latest_version}.")
+                    continue
+
+                if not current_release_date or not latest_release_date:
+                    logger.warning(f"Skipping dependency {dependency['name']} - missing release date information.")
+                    continue
 
             elif dependency['package'] == 'NPM':
                 data = get_NPM_data(dependency['name'])
+                if not data:
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not find package on NPM.")
+                    continue
+
                 current_version = get_npm_current_version(data, dependency['requirement'])
+                if not current_version:
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not resolve current version from requirement: {dependency['requirement']}")
+                    continue
+
                 try:
                     latest_version = get_npm_latest_version(data)
                 except KeyError:
-                    logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
+                    logger.warning(f"Skipping dependency {dependency['name']} - could not get latest version from NPM.")
                     latest_version = None
 
+                if not latest_version:
+                    continue
+
                 try:
-                    if latest_version:
-                        latest_release_date = get_npm_release_date(data, latest_version)
-                    else:
-                        latest_release_date = None
+                    latest_release_date = get_npm_release_date(data, latest_version)
+                    current_release_date = get_npm_release_date(data, current_version)
                 except KeyError:
-                    logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
-                    latest_release_date = None
+                    logger.warning(f"Skipping dependency {dependency['name']} - missing release date info on NPM for {current_version}/{latest_version}")
+                    continue
+            else:
+                # Unsupported package manager
+                continue
 
-                if current_version:
-                    try:
-                        current_release_date = get_npm_release_date(data, current_version)
-                    except KeyError:
-                        logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
-                        current_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
-
-            
             libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
-
-            if not latest_release_date:
-                latest_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
-                libyear = -1
-
-            if not latest_version:
-                latest_version = 'unspecified'     
-
-            if not current_version:
-                current_version = latest_version
-                current_release_date = latest_release_date
 
             if not dependency['requirement']:
                 dependency['requirement'] = 'unspecified'    
@@ -183,4 +187,4 @@ def get_deps_libyear_data(path, logger):
             dependency['latest_release_date'] = latest_release_date
             dependency['libyear'] = libyear
 
-        return [d for d in dependencies if d] 
+        return [d for d in dependencies if 'libyear' in d]

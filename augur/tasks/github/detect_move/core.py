@@ -1,5 +1,5 @@
 from augur.tasks.github.util.github_task_session import *
-from augur.application.db.models import *
+from augur.application.db.models import Repo, CollectionStatus
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
@@ -7,7 +7,17 @@ from datetime import datetime
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.models import HistoricalRepoURLs
+from sqlalchemy.exc import IntegrityError
 
+
+class RepoMovedException(Exception):
+    def __init__(self, message, new_url=None): 
+        super().__init__(message)
+        self.new_url = new_url 
+
+class RepoGoneException(Exception):
+    pass
 
 
 def update_repo_with_dict(repo,new_dict,logger):
@@ -21,15 +31,27 @@ def update_repo_with_dict(repo,new_dict,logger):
             logger: logging object
             db: db object
     """
-    
-    to_insert = repo.__dict__
+    to_insert = dict(repo.__dict__)
     del to_insert['_sa_instance_state']
+
+    old_url = to_insert["repo_git"]
+    repo_id = to_insert["repo_id"]
+
+    with DatabaseSession(logger) as session:
+        previous_alias = HistoricalRepoURLs(repo_id=repo_id, git_url=old_url)
+        try:
+            result = session.add(previous_alias)
+            session.commit()
+        except IntegrityError as e: #Unique violation
+            session.rollback()    
+
     to_insert.update(new_dict)
 
     result = bulk_insert_dicts(logger, to_insert, Repo, ['repo_id'])
 
     url = to_insert['repo_git']
-    logger.info(f"Updated repo for {url}\n")
+    logger.info(f"Updated repo {old_url} to {url} and set alias\n")
+    return url
 
 
 
@@ -37,7 +59,14 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
     response_from_gh = hit_api(key_auth, url, logger)
 
     page_data = parse_json_response(logger, response_from_gh)
-
+    # Note: if parse_json_response fails, it will return a string, causing `in` to do a substring check.
+    # This may lead to a crash if the field is present but the parsing fails.
+    if response_from_gh.status_code != 200 or 'full_name' not in page_data:
+        logger.error(
+            f"Unexpected response fetching redirect target: status={response_from_gh.status_code}, "
+            f"url={url}, body={response_from_gh.text}"
+        )
+        raise Exception("Could not resolve owner/repo from redirect target due to missing data in the github response")
     full_repo_name = page_data['full_name']
 
     splits = full_repo_name.split('/')
@@ -51,18 +80,26 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
     attempts = 0
     while attempts < 10:
-        response_from_gh = hit_api(key_auth, url, logger)
+        response_from_gh = hit_api(key_auth, url, logger, follow_redirects=False)
 
-        if response_from_gh and response_from_gh.status_code != 404:
+        if response_from_gh:
             break
 
         attempts += 1
 
+    if attempts >= 10:
+        logger.error(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
+        raise Exception(f"ERROR: Could not get api response for repo: {url}")
+
     #Update Url and retry if 301
     #301 moved permanently 
     if response_from_gh.status_code == 301:
+        redirect_location = response_from_gh.headers.get('location') or response_from_gh.headers.get('Location')
+        if not redirect_location:
+            logger.error(f"Could not check if repo moved because the redirect location is not present. Url: {url}")
+            raise Exception(f"ERROR: Could not get redirect location for repo: {url}")
 
-        owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
+        owner, name = extract_owner_and_repo_from_endpoint(key_auth, redirect_location, logger)
 
         try:
             old_description = str(repo.description)
@@ -77,9 +114,9 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
             'description': f"(Originally hosted at {url}) {old_description}"
         }
 
-        update_repo_with_dict(repo, repo_update_dict, logger)
+        new_url = update_repo_with_dict(repo, repo_update_dict, logger)
 
-        raise Exception("ERROR: Repo has moved! Resetting Collection!")
+        raise RepoMovedException("ERROR: Repo has moved! Resetting Collection!", new_url=new_url)
     
     #Mark as ignore if 404
     if response_from_gh.status_code == 404:
@@ -115,12 +152,8 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
 
         session.commit()
-        raise Exception("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
+        raise RepoGoneException("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
 
-
-    if attempts >= 10:
-        logger.error(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
-        raise Exception(f"ERROR: Could not get api response for repo: {url}")
     
     #skip if not 404
     logger.info(f"Repo found at url: {url}")

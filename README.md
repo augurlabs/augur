@@ -1,4 +1,4 @@
-# Augur NEW Release v0.89.3
+# Augur NEW Release v0.92.0
 
 Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
 The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [Augur](https://ai.chaoss.io). 
@@ -11,15 +11,15 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-Augur is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.89.3).
+Augur is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.92.0).
 
 
 - The `release` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard.
-  - Materialized views to increase the snappiness of API’s and Frontends on large scale data.
+  - Materialized views to increase the snappiness of APIs and Frontends on large scale data.
   - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all Augur instances.
-  - Support for [8knot](https://github.com/oss-aspen/8kno) dashboards (view a sample [here](https://eightknot.osci.io/)).
+  - Support for [8knot](https://github.com/oss-aspen/8knot) dashboards (view a sample [here](https://eightknot.osci.io/)).
   *beautification coming soon!*
   - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints.
 - The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos *they care about*.
@@ -43,14 +43,17 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 
 ## Collecting Data
 
-Augur supports ```Python3.7``` through ```Python3.11``` on all platforms. ```Python3.12``` and above do not yet work because of machine learning worker dependencies. On OSX, you can create a ```Python3.11``` environment, by running:
+Augur aims to support the current officially supported Python versions (currently centered around **Python 3.11**). We use [uv](https://github.com/astral-sh/uv) to manage the Python environment because it is fast and takes care of virtual environments for you. To run a command, such as `pytest` in the python environment, you would write:
+
+```bash
+uv run pytest
 ```
-$ python3.11 -m venv path/to/venv
-```
+
+The first time this is run, `uv` will automatically download and install the python dependencies for you.
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
 
-Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
+Augur collects more data about open source software projects than any other available software. 
 
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data.
 
@@ -78,80 +81,18 @@ If you get stuck, please feel free to [ask for help](https://github.com/chaoss/a
 
 ## Contributing
 
-To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
+To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
 We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
 
 ## License, Copyright, and Funding
 
-Copyright © 2025 University of Nebraska at Omaha, University of Missouri, Brian Warner, and the CHAOSS Project.
+Copyright © 2026 University of Missouri, Sean Goggins, and Derek Howard.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
 This work has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, contributions from VMWare, Red Hat Software, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit.
 
 Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, others omitted due to the  memory limitations of project maintainers, and 15 Google Summer of Code Students. 
+## Maintainers & Contributors
 
-Current maintainers
---------------------
-- `Derek Howard <https://github.com/howderek>`_
-- `Andrew Brain <https://github.com/ABrain7710>`_
-- `Isaac Milarsky <https://github.com/IsaacMilarky>`_
-- `John McGinnis <https://github.com/Ulincys>`_ 
-- `Sean P. Goggins <https://github.com/sgoggins>`_ 
-
-Former maintainers
---------------------
-- `Carter Landis <https://github.com/ccarterlandis>`_
-- `Gabe Heim <https://github.com/gabe-heim>`_
-- `Matt Snell <https://github.com/Nebrethar>`_
-- `Christian Cmehil-Warn <https://github.com/christiancme>`_
-- `Jonah Zukosky <https://github.com/jonahz5222>`_
-- `Carolyn Perniciaro <https://github.com/CMPerniciaro>`_
-- `Elita Nelson <https://github.com/ElitaNelson>`_
-- `Michael Woodruff <https://github.com/michaelwoodruffdev/>`_
-- `Max Balk <https://github.com/maxbalk/>`_
-
-Contributors
---------------------
-- `Dawn Foster <https://github.com/geekygirldawn/>`_
-- `Ivana Atanasova <https://github.com/ivanayov/>`_
-- `Georg J.P. Link <https://github.com/GeorgLink/>`_
-- `Gary P White <https://github.com/garypwhite/>`_
-
-GSoC 2025 Participants
------------------------
-
-GSoC 2022 participants
------------------------
-- `Kaxada <https://github.com/kaxada>`_
-- `Mabel F <https://github.com/mabelbot>`_
-- `Priya Srivastava <https://github.com/Priya730>`_
-- `Ramya Kappagantu <https://github.com/RamyaKappagantu>`_
-- `Yash Prakash <https://gist.github.com/yash-yp>`_
-
-GSoC 2021 participants
------------------------
-- `Dhruv Sachdev <https://github.com/Dhruv-Sachdev1313>`_
-- `Rashmi K A <https://github.com/Rashmi-K-A>`_
-- `Yash Prakash <https://github.com/yash2002109/>`_
-- `Anuj Lamoria <https://github.com/anujlamoria/>`_
-- `Yeming Gu <https://github.com/gymgym1212/>`_
-- `Ritik Malik <https://gist.github.com/ritik-malik>`_
-
-GSoC 2020 participants
------------------------
-- `Akshara P <https://github.com/aksh555/>`_
-- `Tianyi Zhou <https://github.com/tianyichow/>`_
-- `Pratik Mishra <https://github.com/pratikmishra356/>`_
-- `Sarit Adhikari <https://github.com/sarit-adh/>`_
-- `Saicharan Reddy <https://github.com/mrsaicharan1/>`_
-- `Abhinav Bajpai <https://github.com/abhinavbajpai2012/>`_
-
-GSoC 2019 participants
------------------------
-- `Bingwen Ma <https://github.com/bing0n3/>`_
-- `Parth Sharma <https://github.com/parthsharma2/>`_
-
-GSoC 2018 participants
------------------------
-- `Keanu Nichols <https://github.com/kmn5409/>`_
+Refer to [CONTRIBUTORS.md](./CONTRIBUTORS.md) for detailed information about project maintainers, contributors, and GSoC participants.

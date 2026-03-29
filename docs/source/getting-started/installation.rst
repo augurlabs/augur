@@ -31,9 +31,7 @@ Required:
 
 
 
-**Python 3.9 is not yet supported because TensorFlow, which we use in our machine learning workers, does not yet support Python 3.9.**
-
-Our REST API & data collection workers write in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
+Our REST API & data collection workers query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository. Values for GitLab and GitHub access tokens are **required** for data collection and must be provided (an invalid token can be provided if you don't plan to use one platform) .
 
 Optional:
 
@@ -48,9 +46,9 @@ The ``message_insights_worker`` uses a system-level package called OpenMP. You w
 
 Caching System (Redis)
 ----------------------
-* `Linux Installation <https://redis.io/docs/getting-started/installation/install-redis-on-linux/>`__
-* `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
-* `Windows Installation <https://redis.io/docs/getting-started/installation/install-redis-on-windows/>`__
+* `Linux Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-linux/>`__
+* `Mac Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-mac-os/>`__
+* `Windows Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-windows/>`__
 
 Message Broker (RabbitMQ)
 -------------------------

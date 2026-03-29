@@ -5,70 +5,13 @@
         {% if repo.repo_id %}
         <h1 id="message">Report for: {{ repo.repo_name|title }}</h1>
         <p><a href="{{ repo.repo_git }}" target="_blank" data-toggle="tooltip" title="opens in new tab">{{ repo.repo_git }}</a></p>
-        {% for report in reports %}
-        <h2>{{ report|replace("_", " ")|title }}</h2>
-        {% for image in images[report] %}
-        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px;">
-            <div class="col">
-                <div class="card img_placeholder d-flex justify-content-center align-items-center">
-                    <div class="dot-flashing" id="{{ image['id'] }}"></div>
-                </div>
-                <div class="card-footer card-footer-wrap">
-                    <small class="text-muted" id="desc_report_image_{{ image['id'] }}">{{ image['description'] }}</small>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% endfor %}
+        
         {% else %}
         <h1 id="message">Repository {{ repo_id }} not found<h1>
         {% endif %}
     </div>
 </div>
-{% if repo.repo_id %}
-{# Wait for cache response:
-    This method queries the server from the client, asking for confirmation
-    of which images are available on the server. The server will asynchronously
-    download the requested images as the page is loading, then once the page
-    loads, the client will query a locking endpoint on the server and wait
-    for a response.
-#}
-<script type="text/javascript">
-    $.getJSON("{{ url_for('wait_for_report_request', id=repo_id) }}", function(image_data) {
-        // Collect all placeholder images to be replaced with their visualizations
-        var image_placeholders = document.getElementsByClassName("img_placeholder");
-        for(let index = 0; index < image_placeholders.length; ++index) {
-            let div = image_placeholders[index].children[0];
-            if(typeof div != "object") {
-                // For some reason, extraneous elements are collected
-                continue;
-            }
-            // Remove the class which enables the "loading" animation
-            div.classList.remove("dot-flashing");
-            // Create a backup image for non-existent visualizations
-            var backup = document.createElement("img");
-            backup.setAttribute("src", "{{ url_for('static', filename= 'img/auggie_shrug.png') }}");
-            backup.setAttribute("class", "img-fluid");
-            // If a visualization failed to load, this dictionary entry is False
-            if(image_data['images'][div.id]['exists']) {
-                // The ID of each div was set to the ID of its intended image
-                var image = document.createElement("img");
-                image_path = "{{ url_for('cache') }}" + image_data['images'][div.id]['filename'];
-                image.setAttribute("src", image_path);
-                image.setAttribute("class", "img-fluid");
-                // Dynamically trigger the image modal when clicked
-                image.setAttribute("onclick", "displayModal(\"report_image_" + div.id + "\")");
-                image.setAttribute("id", "report_image_" + div.id);
-                image.setAttribute("data-toggle", "tooltip");
-                image.setAttribute("title", "Click to expand");
-                div.appendChild(image);
-            } else {
-                div.appendChild(backup);
-            }
-        }
-    });
-</script>
-{% endif %}
+
 <div class="modal" id="viewImg" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">

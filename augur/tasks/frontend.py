@@ -111,7 +111,6 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
                 if existing_repo.repo_group_id != repo_group_id:
                     update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
 
-                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
                 continue
             
@@ -150,7 +149,6 @@ def get_org_repo_data(orgs, session):
 
     return repo_data
 
-# TODO: Do we need to check if the repo already exists in the user group?
 def add_new_github_repos(repo_data, group_id, session, logger):
 
       # get data for repos to determine type, src id, and if they exist
@@ -198,7 +196,6 @@ def divide_list_into_chunks(data, size):
         yield data[i:i + size]
 
 
-# TODO: Make it only get like 100 at a time
 def get_github_repos_data(repo_data, session, logger):
 
     repo_urls = [x[0] for x in repo_data]
@@ -364,42 +361,3 @@ def update_existing_repos_repo_group_id(session, repo_id, new_repo_group_id):
 #             invalid_urls.append(url)
 
 #     return valid_orgs, valid_repos, invalid_urls
-
-
-    
-
-
-# TODO: Change to github specific
-# @celery.task
-# def add_repo(user_id, group_name, repo_url):
-
-#     logger = logging.getLogger(add_org.__name__) 
-
-#     with GithubTaskSession(logger) as session:
-#         result = UserRepo.add_github_repo(session, repo_url, user_id, group_name)
-
-#     print(repo_url, result)
-
-
-# # TODO: Change to github specific
-# @celery.task
-# def add_org(user_id, group_name, org_url):
-
-#     logger = logging.getLogger(add_org.__name__) 
-
-#     with GithubTaskSession(logger) as session:
-#             result = UserRepo.add_github_org_repos(session, org_url, user_id, group_name)
-
-#     print(org_url, result)
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-from tests.test_workers.worker_persistance.util_persistance import *
+from tests.test_workers.worker_persistence.util_persistence import *
 import pandas as pd
 #from augur.cli import add_repos
 #from augur.cli import add_repo_groups

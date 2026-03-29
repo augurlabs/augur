@@ -149,7 +149,12 @@ def git_repo_initialize(facade_helper, session, repo_git):
         facade_helper.log_activity('Verbose', f"Cloning: {git}")
 
         cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
-        return_code = subprocess.Popen([cmd], shell=True).wait()
+        return_code, _ = facade_helper.run_git_command(
+            cmd,
+            timeout=7200,  # 2 hours for large repos
+            capture_output=False,
+            operation_description=f'git clone {git}'
+        )
 
         if (return_code == 0):
             # If cloning succeeded, repo is ready for analysis
@@ -317,8 +322,12 @@ def git_repo_updates(facade_helper, repo_git):
 
             firstpull = (f"git -C {absolute_path} pull")
 
-            return_code_remote = subprocess.Popen(
-                [firstpull], shell=True).wait()
+            return_code_remote, _ = facade_helper.run_git_command(
+                firstpull,
+                timeout=600,  # 10 minutes for git pull
+                capture_output=False,
+                operation_description=f'git pull {repo.repo_git}'
+            )
 
             facade_helper.log_activity('Verbose', 'Got to here. 1.')
 
@@ -334,13 +343,12 @@ def git_repo_updates(facade_helper, repo_git):
                 getremotedefault = (
                     f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
-                return_code_remote = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-                remotedefault = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-                remotedefault = remotedefault.decode()
+                return_code_remote, remotedefault = facade_helper.run_git_command(
+                    getremotedefault,
+                    timeout=60,  # 1 minute for remote query
+                    capture_output=True,
+                    operation_description='get remote default branch'
+                )
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
@@ -351,14 +359,23 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity(
                     'Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
 
-                return_code_remote_default_again = subprocess.Popen(
-                    [getremotedefault], shell=True).wait()
+                return_code_remote_default_again, _ = facade_helper.run_git_command(
+                    getremotedefault,
+                    timeout=600,  # 10 minutes for git checkout
+                    capture_output=False,
+                    operation_description=f'git checkout {remotedefault}'
+                )
 
                 if return_code_remote_default_again == 0:
                     facade_helper.log_activity('Verbose', "local checkout worked.")
                     cmd = (f"git -C {absolute_path} pull")
 
-                    return_code = subprocess.Popen([cmd], shell=True).wait()
+                    return_code, _ = facade_helper.run_git_command(
+                        cmd,
+                        timeout=600,  # 10 minutes for git pull
+                        capture_output=False,
+                        operation_description=f'git pull {repo.repo_git}'
+                    )
 
         except Exception as e:
             facade_helper.log_activity(
@@ -369,7 +386,12 @@ def git_repo_updates(facade_helper, repo_git):
 
             cmd = (f"git -C {absolute_path} pull")
 
-            return_code = subprocess.Popen([cmd], shell=True).wait()
+            return_code, _ = facade_helper.run_git_command(
+                cmd,
+                timeout=600,  # 10 minutes for git pull
+                capture_output=False,
+                operation_description=f'git pull {repo.repo_git}'
+            )
 
         # If the attempt succeeded, then don't try any further fixes. If
         # the attempt to fix things failed, give up and try next time.
@@ -392,37 +414,36 @@ def git_repo_updates(facade_helper, repo_git):
             getremotedefault = (
                 f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
-            return_code_remote = subprocess.Popen(
-                [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-            remotedefault = subprocess.Popen(
-                [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-            remotedefault = remotedefault.decode()
+            return_code_remote, remotedefault = facade_helper.run_git_command(
+                getremotedefault,
+                timeout=60,  # 1 minute for remote query
+                capture_output=True,
+                operation_description='get remote default branch'
+            )
 
             try:
 
                 getremotedefault = (
                     f"git -C {absolute_path} checkout {remotedefault}")
 
-                return_code_remote_default = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-                return_message_getremotedefault = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
+                return_code_remote_default, _ = facade_helper.run_git_command(
+                    getremotedefault,
+                    timeout=600,  # 10 minutes for git checkout
+                    capture_output=False,
+                    operation_description=f'git checkout {remotedefault}'
+                )
 
                 facade_helper.log_activity(
-                    'Verbose', f'get remote default result: {return_message_getremotedefault}')
+                    'Verbose', f'get remote default result (return code): {return_code_remote_default}')
 
                 getcurrentbranch = (f"git -C {absolute_path} branch")
 
-                return_code_local = subprocess.Popen(
-                    [getcurrentbranch], stdout=subprocess.PIPE, shell=True).wait()
-
-                localdefault = subprocess.Popen(
-                    [getcurrentbranch], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-                localdefault = localdefault.decode()
+                return_code_local, localdefault = facade_helper.run_git_command(
+                    getcurrentbranch,
+                    timeout=60,  # 1 minute for branch query
+                    capture_output=True,
+                    operation_description='get current branch'
+                )
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')
@@ -430,20 +451,32 @@ def git_repo_updates(facade_helper, repo_git):
                 cmd_checkout_default = (
                     f"git -C {absolute_path} checkout {remotedefault}")
 
-                cmd_checkout_default_wait = subprocess.Popen(
-                    [cmd_checkout_default], shell=True).wait()
+                cmd_checkout_default_wait, _ = facade_helper.run_git_command(
+                    cmd_checkout_default,
+                    timeout=600,  # 10 minutes for git checkout
+                    capture_output=False,
+                    operation_description=f'git checkout {remotedefault}'
+                )
 
                 cmdpull2 = (f"git -C {absolute_path} pull")
 
-                cmd_reset = (f"git -C {absolute_path} reset --hard origin")
+                cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
 
-                cmd_reset_wait = subprocess.Popen(
-                    [cmd_reset], shell=True).wait()
+                cmd_reset_wait, _ = facade_helper.run_git_command(
+                    cmd_reset,
+                    timeout=300,  # 5 minutes for git reset
+                    capture_output=False,
+                    operation_description=f'git reset --hard origin/{remotedefault}'
+                )
 
                 cmd_clean = (f"git -C {absolute_path} clean -df")
 
-                return_code_clean = subprocess.Popen(
-                    [cmd_clean], shell=True).wait()
+                return_code_clean, _ = facade_helper.run_git_command(
+                    cmd_clean,
+                    timeout=300,  # 5 minutes for git clean
+                    capture_output=False,
+                    operation_description='git clean -df'
+                )
 
             except Exception as e:
 
@@ -453,7 +486,12 @@ def git_repo_updates(facade_helper, repo_git):
         cmdpull2 = (f"git -C {absolute_path} pull")
 
         print(cmdpull2)
-        return_code = subprocess.Popen([cmdpull2], shell=True).wait()
+        return_code, _ = facade_helper.run_git_command(
+            cmdpull2,
+            timeout=600,  # 10 minutes for git pull
+            capture_output=False,
+            operation_description=f'git pull {repo.repo_git}'
+        )
 
         attempt += 1
 

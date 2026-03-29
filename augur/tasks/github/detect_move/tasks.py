@@ -1,10 +1,12 @@
 import logging
 
-from augur.tasks.github.detect_move.core import *
+from augur.tasks.github.detect_move.core import ping_github_for_repo_move, RepoMovedException, RepoGoneException
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.lib import get_repo_by_repo_git, get_session
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+
+from celery.exceptions import Retry, Reject
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -24,7 +26,15 @@ def detect_github_repo_move_core(repo_git : str) -> None:
 
         #Ping each repo with the given repo_git to make sure
         #that they are still in place. 
-        ping_github_for_repo_move(session, key_auth, repo, logger)
+        try:
+            ping_github_for_repo_move(session, key_auth, repo, logger)
+        except RepoMovedException as e:
+            if e.new_url is not None:
+                raise Retry(e.new_url)
+            else:
+                raise Reject(e)
+        except RepoGoneException as e:
+            raise Reject(e)
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)

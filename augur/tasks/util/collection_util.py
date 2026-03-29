@@ -10,107 +10,13 @@ from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db import get_engine
 from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
-
-
-def get_list_of_all_users():
-    #Get a list of all users.
-    query = s.sql.text("""
-        SELECT  
-        user_id
-        FROM augur_operations.users
-    """)
-
-    users = execute_sql(query).fetchall()
-    return users
-
-
-def get_required_conditions_for_core_repos(allow_collected_before = False, days_until_collect_again = 1):
-
-    if not allow_collected_before:
-        condition_concat_string = f"""
-            core_status='{str(CollectionState.PENDING.value)}' AND core_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.core_data_last_collected IS NULL
-            AND core_status!='{str(CollectionState.COLLECTING.value)}'
-        """
-    else:
-        condition_concat_string = f"""
-            core_status='Success' AND core_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.core_data_last_collected IS NOT NULL
-            AND core_status!='{str(CollectionState.COLLECTING.value)}'
-            AND core_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
-        """
-    
-    return condition_concat_string
-
-def get_required_conditions_for_secondary_repos(allow_collected_before = False, days_until_collect_again = 1):
-
-    if not allow_collected_before:
-        condition_concat_string = f"""
-            secondary_status='{str(CollectionState.PENDING.value)}' AND secondary_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}' 
-            AND augur_operations.collection_status.secondary_data_last_collected IS NULL
-            AND secondary_status!='{str(CollectionState.COLLECTING.value)}'
-        """
-    else:
-        condition_concat_string = f"""
-            secondary_status='Success' AND secondary_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.secondary_data_last_collected IS NOT NULL
-            AND augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'
-            AND secondary_status!='{str(CollectionState.COLLECTING.value)}'
-            AND secondary_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
-        """
-    
-    return condition_concat_string
-
-def get_required_conditions_for_facade_repos(allow_collected_before = False, days_until_collect_again = 1):
-
-    if not allow_collected_before:
-        condition_concat_string = f"""
-            facade_status='{str(CollectionState.UPDATE.value)}' AND facade_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}'
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}'
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'
-            AND augur_operations.collection_status.facade_data_last_collected IS NULL
-            AND facade_status!='{str(CollectionState.COLLECTING.value)}'
-        """
-    else:
-        condition_concat_string = f"""
-            facade_status='Success' AND facade_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.facade_data_last_collected IS NOT NULL
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}'
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}'
-            AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'
-            AND facade_status!='{str(CollectionState.COLLECTING.value)}'
-            AND facade_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
-        """
-    
-    return condition_concat_string
-
-def get_required_conditions_for_ml_repos(allow_collected_before = False, days_until_collect_again = 1):
-
-    if not allow_collected_before:
-        condition_concat_string = f"""
-            ml_status='{str(CollectionState.PENDING.value)}' AND ml_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'
-            AND augur_operations.collection_status.ml_data_last_collected IS NULL
-            AND ml_status!='{str(CollectionState.COLLECTING.value)}'
-        """
-    else:
-        condition_concat_string = f"""
-            ml_status='Success' AND ml_status!='{str(CollectionState.ERROR.value)}'
-            AND augur_operations.collection_status.ml_data_last_collected IS NOT NULL
-            AND ml_status!='{str(CollectionState.COLLECTING.value)}'
-            AND ml_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
-        """
-    
-    return condition_concat_string
-
+from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 
 
 class CollectionRequest:
@@ -204,9 +110,19 @@ def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
     return valid_repo_git_list
 
 
-def get_enabled_phase_names_from_config():
+def get_enabled_phase_names_from_config(engine, logger):
+    with DatabaseSession(logger, engine) as session:
+        return get_enabled_phase_names_from_config_session(session, logger)
 
-    phase_options = get_section("Task_Routine")
+
+def get_enabled_phase_names_from_config_session(session, logger):
+
+    config = AugurConfig(logger, session)
+    return get_enabled_phase_names_from_config_object(config)
+
+
+def get_enabled_phase_names_from_config_object(config):
+    phase_options = config.get_section("Task_Routine")
 
     #Get list of enabled phases 
     enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
@@ -597,37 +513,33 @@ class AugurTaskRoutine:
             for repo_git, full_collection in col_hook.repo_list:
 
                 repo = get_repo_by_repo_git(repo_git)
+                platform_name = "github"
+                # this needs to be here and not up a level since it should be set/reset for each repo.
+                # otherwise a gitlab repo would reset it and cause subsequent github repos to use gitlab phases.
+                phases = None
                 if "github" in repo.repo_git:
-                    augur_collection_sequence = []
-                    for job in col_hook.phases:
-                        #Add the phase to the sequence in order as a celery task.
-                        #The preliminary task creates the larger task chain 
-                        augur_collection_sequence.append(job(repo_git, full_collection))
+                    phases = col_hook.phases
+                    # use default platform name
 
-                    #augur_collection_sequence.append(core_task_success_util.si(repo_git))
-                    #Link all phases in a chain and send to celery
-                    augur_collection_chain = chain(*augur_collection_sequence)
-                    task_id = augur_collection_chain.apply_async().task_id
+                elif "gitlab" in repo.repo_git:
+                    platform_name = "gitlab"
+                    if col_hook.gitlab_phases is None:
+                        continue
+                    phases = col_hook.gitlab_phases
+           
+                augur_collection_sequence = []
+                for job in phases:
+                    #Add the phase to the sequence in order as a celery task.
+                    #The preliminary task creates the larger task chain 
+                    augur_collection_sequence.append(job(repo_git, full_collection))
 
-                    self.logger.info(f"Setting github repo {col_hook.name} status to collecting for repo: {repo_git}")
+                #augur_collection_sequence.append(core_task_success_util.si(repo_git))
+                #Link all phases in a chain and send to celery
+                augur_collection_chain = chain(*augur_collection_sequence)
+                task_id = augur_collection_chain.apply_async().task_id
 
-                    #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-                    yield repo_git, task_id, col_hook.name
-                else:
-                    if col_hook.gitlab_phases is not None:
-                        
-                        augur_collection_sequence = []
-                        for job in col_hook.gitlab_phases:
-                            #Add the phase to the sequence in order as a celery task.
-                            #The preliminary task creates the larger task chain 
-                            augur_collection_sequence.append(job(repo_git, full_collection))
+                self.logger.info(f"Setting {platform_name} repo {col_hook.name} status to collecting for repo: {repo_git}")
 
-                        #augur_collection_sequence.append(core_task_success_util.si(repo_git))
-                        #Link all phases in a chain and send to celery
-                        augur_collection_chain = chain(*augur_collection_sequence)
-                        task_id = augur_collection_chain.apply_async().task_id
-
-                        self.logger.info(f"Setting gitlab repo {col_hook.name} status to collecting for repo: {repo_git}")
-
-                        #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-                        yield repo_git, task_id, col_hook.name
+                #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+                yield repo_git, task_id, col_hook.name
+                

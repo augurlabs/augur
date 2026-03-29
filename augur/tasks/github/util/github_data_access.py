@@ -4,6 +4,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
+from augur.util.keys import mask_key
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -13,7 +14,7 @@ class RatelimitException(Exception):
     def __init__(self, response, keys_used, message="Github Rate limit exceeded") -> None:
 
         self.response = response
-
+        keys_used = [ mask_key(k) for k in keys_used]
         super().__init__(f"{message}. Keys used: {keys_used}")
 
 class UrlNotFoundException(Exception):
@@ -122,8 +123,8 @@ class GithubDataAccess:
 
             if response.status_code in [403, 429]:
                 self.expired_keys_for_request.append(self.key)
-                self.logger.warning(f"Github rate limit exceeded. Key: {self.key[-5:]}. Response: {response.text}")
-                raise RatelimitException(response, self.expired_keys_for_request[-5:])
+                self.logger.warning(f"Github rate limit exceeded. Key: {mask_key(self.key)}. Response: {response.text}")
+                raise RatelimitException(response, self.expired_keys_for_request)
 
             # There are cases with PR files, PR commits, and messages where the parent object is removed after 
             # It is collected, leading the the associated URL for those objects to return a 404. 
@@ -147,7 +148,7 @@ class GithubDataAccess:
             try:
                 if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
                     self.expired_keys_for_request.append(self.key)
-                    raise RatelimitException(response, self.expired_keys_for_request[-5:])
+                    raise RatelimitException(response, self.expired_keys_for_request)
             except ValueError:
                 self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
 
@@ -170,7 +171,7 @@ class GithubDataAccess:
         Returns:
             bool: Boolean describing whether or not the request should be retried
         """
-        return not isinstance(num, (UrlNotFoundException, ResourceGoneException))
+        return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
@@ -225,7 +226,7 @@ class GithubDataAccess:
             self.key = self.key_client.expire(self.key, time.time() + 60)
 
         if previous_key == self.key:
-            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {self.key[-5:]})")
+            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
 
     def __add_query_params(self, url: str, additional_params: dict) -> str:
         """Add query params to a url.

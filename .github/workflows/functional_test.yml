@@ -1,0 +1,31 @@
+name: "Functional tests"
+# Runs automated test suites that ensure functionality is preserved. Any failures should prevent code from shipping.
+on:
+  pull_request:
+    branches: [main, release]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test with ${{ matrix.env }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ["3.10", "3.11"] #, "3.12", "3.13", "3.14"
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run Tests
+        run: |
+          uv run --python ${{ matrix.env }} pytest \
+            tests/test_classes \
+            --color=yes

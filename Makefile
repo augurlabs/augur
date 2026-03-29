@@ -99,7 +99,7 @@ test-data:
 test:
 	# @ pytest tests/test_tasks/test_github_tasks/
 	@ python3 tests/start_server.py
-	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/ tests/test_tasks/ tests/test_applicaton/ 
+	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/ tests/test_tasks/ tests/test_application/ 
 	@ python3 tests/stop_server.py
 
 test-api:
@@ -109,19 +109,7 @@ test-api:
 	
 
 
-# test-application:
-# 	@ bash -c 'tox -e py-application'
 
-#Worker's tests need a database from docker
-#To use the docker daemon you need to be root so sudo is needed.
-# test-workers:
-# 	@ bash -c 'sudo tox -e py-workers'
-
-# test-metric-routes:
-# 	@ bash -c 'tox -e py-metric-routes'
-
-# test-python-versions:
-# 	@ bash -c 'tox -e ALL'
 
 
 #

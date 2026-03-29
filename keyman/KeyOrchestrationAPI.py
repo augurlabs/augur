@@ -1,8 +1,7 @@
 
-""" This is a hybrid-fixed specification
+"""This is a hybrid-fixed specification
 
-The names of the channels *MUST NOT* change,
-but the channel IDs are free to
+The names of the channels *MUST NOT* change, but the channel IDs are free to change.
 """
 spec = {
     "channels": [
@@ -92,8 +91,22 @@ spec = {
 }
 
 class WaitKeyTimeout(Exception):
-    def __init__(self, timeout_seconds) -> None:
-        self.tiemout_seconds = timeout_seconds
+    """Raised when the Key Orchestrator returns a 'wait' message.
+
+    This indicates that there are no fresh keys available for the requested
+    platform.
+
+    Args:
+        timeout_seconds: How long the client needs to sleep (in seconds)
+            before a fresh key will become available.
+    """
+    def __init__(self, timeout_seconds: int) -> None:
+        self.timeout_seconds = timeout_seconds
 
 class InvalidRequest(Exception):
+    """Raised when a request doesn't conform to the KeyOrchestrationAPI spec.
+
+    This can occur due to unknown message type, missing required fields,
+    invalid field types, or malformed JSON payload.
+    """
     pass

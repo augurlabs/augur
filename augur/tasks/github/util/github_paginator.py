@@ -9,7 +9,7 @@ from typing import Optional
 from enum import Enum
 
  
-def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', ) -> Optional[httpx.Response]:
+def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', follow_redirects=True) -> Optional[httpx.Response]:
     """Ping the api and get the data back for the page.
 
     Returns:
@@ -21,7 +21,7 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
 
         try:
             response = client.request(
-                method=method, url=url, auth=key_manager, timeout=timeout, follow_redirects=True)
+                method=method, url=url, auth=key_manager, timeout=timeout, follow_redirects=follow_redirects)
 
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")

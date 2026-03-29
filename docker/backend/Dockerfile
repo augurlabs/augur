@@ -20,7 +20,9 @@ RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.86.1"
+
+ARG VERSION
+LABEL version=${VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
@@ -39,33 +41,10 @@ RUN set -x \
         postgresql-client \
         libpq-dev \
         build-essential \
-        chromium \
         tar \
         jq \
-        chromium-driver \
-        firefox-esr \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Install Geckodriver
-RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r '.tag_name' | sed 's/v//') \
-    && ARCH=$(uname -m) \
-    && if [ "$ARCH" = "aarch64" ]; then \
-         GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz"; \
-         GECKODRIVER_FILE="geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz"; \
-       else \
-         GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"; \
-         GECKODRIVER_FILE="geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"; \
-       fi \
-    && wget $GECKODRIVER_URL \
-    && tar -xzf $GECKODRIVER_FILE \
-    && mv geckodriver /usr/local/bin/ \
-    && rm $GECKODRIVER_FILE
-
-# Verify installations
-RUN firefox --version
-RUN geckodriver --version
-
 
 EXPOSE 5000
 

@@ -9,7 +9,7 @@ import logging
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import AugurConfig, redact_setting_value
 from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
 from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -68,15 +68,15 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
         config = AugurConfig(logger, session)
 
-        default_config = config.default_config
+        augmented_config = config.base_config
 
         phase_names = get_phase_names_without_import()
 
         #Add all phases as enabled by default
         for name in phase_names:
 
-            if name not in default_config['Task_Routine']:
-                default_config['Task_Routine'].update({name : 1})
+            if name not in augmented_config['Task_Routine']:
+                augmented_config['Task_Routine'].update({name : 1})
 
         #print(default_config)
         if redis_conn_string:
@@ -91,18 +91,18 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
             except ValueError:
                 pass
 
-            default_config["Redis"]["connection_string"] = redis_conn_string
+            augmented_config["Redis"]["connection_string"] = redis_conn_string
 
         if rabbitmq_conn_string:
-            default_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
+            augmented_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
 
-        default_config["Keys"] = keys
+        augmented_config["Keys"] = keys
 
-        default_config["Facade"]["repo_directory"] = facade_repo_directory
+        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
 
-        default_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
+        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
 
-        config.load_config_from_dict(default_config)
+        config.load_config_from_dict(augmented_config)
 
 
 @cli.command('load')
@@ -162,35 +162,17 @@ def add_section(ctx, section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--data-type')
 @test_connection
 @test_db_connection
 @with_database
 @click.pass_context
-def config_set(ctx, section, setting, value, data_type):
+def config_set(ctx, section, setting, value):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
-        
-        if not data_type:
-            result = session.query(Config).filter(Config.section_name == section, Config.setting_name == setting).all()
-            if not result:
-                return click.echo("You must specify a data-type if the setting does not already exist")
-            data_type = result[0].type
 
-        if data_type not in config.accepted_types:
-            print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
-            return
-
-        setting_dict = {
-            "section_name": section,
-            "setting_name": setting, 
-            "value": value,
-            "type": data_type
-        }
-
-        config.add_or_update_settings([setting_dict])
-        print(f"{setting} in {section} section set to {value}")
+        config.add_value(section, setting, value)
+        print(f"{setting} in {section} section set to {redact_setting_value(section, setting, value)}")
 
 @cli.command('get')
 @click.option('--section', required=True)

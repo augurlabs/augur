@@ -2,7 +2,9 @@
 FROM postgres:16
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.86.1"
+
+ARG VERSION
+LABEL version=${VERSION}
 
 ENV POSTGRES_DB="test"
 ENV POSTGRES_USER="augur"

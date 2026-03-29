@@ -3,11 +3,15 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotF
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_batch_size
+
+
 
 
 def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collection=False):
-    
+
+    pr_commit_batch_size = get_batch_size()
+
     if full_collection:
         # query existing PRs and the respective url we will append the commits url to
         pr_url_sql = s.sql.text("""
@@ -43,13 +47,14 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
 
     github_data_access = GithubDataAccess(key_auth, logger)
-        
+
+    pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
     all_data = []
     for index,pr_info in enumerate(pr_urls):
         logger.info(f'{task_name}: Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
-        
+
         if not pr_info.get('pr_url'):
             logger.warning(f"{task_name}: No pr_url found for pull request info: {pr_info}. Skipping.")
             continue
@@ -70,13 +75,17 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                     'repo_id': repo.repo_id,
                 }
                 all_data.append(pr_commit_row)
+
+                if len(all_data) >= pr_commit_batch_size:
+                    logger.info(f"{task_name}: Inserting {len(all_data)} rows")
+                    augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+                    all_data.clear()
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR with url of {pr_info['pr_url']} returned 404 on commit data. Skipping.")
             continue
-            
+
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
-        pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
         augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
             
 

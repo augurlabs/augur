@@ -31,7 +31,7 @@ the following resources (or more):
 - 10 GB RAM
 
 Clone the Augur repository and create a .env file in the top level directory
-with the following fields:
+with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):
 
 .. code:: python
 

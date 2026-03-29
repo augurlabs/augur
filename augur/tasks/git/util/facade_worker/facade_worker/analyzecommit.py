@@ -149,14 +149,19 @@ def analyze_commit(
     recordsToInsert: List[Dict[str, Any]] = []
 
     try:
-        git_log = subprocess.Popen(
-            ["git --git-dir %s log -p -M %s -n1 "
-             "--pretty=format:'"
-             "author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
-             "committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
-             "parents: %%p%%nEndPatch' " % (repo_loc, commit)],
-            stdout=subprocess.PIPE,
-            shell=True
+        pretty_format = (
+            "author_name: %an%n"
+            "author_email: %ae%n"
+            "author_date:%ai%n"
+            "committer_name: %cn%n"
+            "committer_email: %ce%n"
+            "committer_date: %ci%n"
+            "parents: %p%n"
+            "EndPatch"
+        )
+        git_log = check_output(
+            [f"git", "--git-dir", repo_loc, "log", "-p", "-M", commit, "-n1",
+             f"--pretty=format:{pretty_format}"]
         )
     except Exception as e:
         logger.error(f"Failed to run git log for commit {commit}: {e}")
@@ -189,7 +194,7 @@ def analyze_commit(
     }
 
     try:
-        log_output = git_log.stdout.read().decode("utf-8", errors="ignore")
+        log_output = git_log.decode("utf-8", errors="ignore")
     except Exception as e:
         logger.error(f"Failed to read stdout from git process for commit {commit}: {e}")
         return [], msg_record

@@ -39,8 +39,14 @@ del is_dev
 
 # set the log location for gunicorn    
 logs_directory = get_value('Logging', 'logs_directory')
+
+is_docker = os.getenv("AUGUR_DOCKER_DEPLOY", 'False').lower() in ('true', '1', 't', 'y', 'yes')
 accesslog = f"{logs_directory}/gunicorn.log"
 errorlog = f"{logs_directory}/gunicorn.log"
+
+# If deploying via docker, include gunicorn error logs in the docker log stream by sending it to stdout
+if is_docker:
+    errorlog = '-'
 
 ssl_bool = get_value('Server', 'ssl')
 

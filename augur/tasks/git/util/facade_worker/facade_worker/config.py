@@ -29,14 +29,15 @@ import os
 import json
 import logging
 import random
+import subprocess
 from urllib.parse import urlparse
 import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.lib import execute_sql
-from augur.application.db.lib import get_section
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,10 @@ class FacadeHelper():
 
         self.logger = logger
         
-        worker_options = get_section("Facade")
+        with DatabaseSession(logger, engine) as session:
+            config = AugurConfig(logger, session)
+        
+            worker_options = config.get_section("Facade")
 
         self.limited_run = worker_options["limited_run"]
         self.delete_marked_repos = worker_options["delete_marked_repos"]
@@ -127,6 +131,8 @@ class FacadeHelper():
         self.rebuild_caches = worker_options["rebuild_caches"]
         self.multithreaded = worker_options["multithreaded"]
         self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
+        self.facade_contributor_full_recollect = worker_options["facade_contributor_full_recollect"]
+        self.commit_messages = worker_options["commit_messages"]
 
         self.tool_source = "Facade"
         self.data_source = "Git Log"
@@ -166,7 +172,13 @@ class FacadeHelper():
         # Log an activity based upon urgency and user's preference.  If the log level is
         # "Debug", then just print it and don't save it in the database.
         log_options = ('Error','Quiet','Info','Verbose','Debug')
-        self.logger.info(f"* {status}\n")
+        logmsg = f"* {status}\n"
+        if level == "Error":
+            self.logger.error(logmsg)
+        elif level == "Debug" or level == "Verbose":
+            self.logger.debug(logmsg)
+        else:
+            self.logger.info(logmsg)
 
         #Return if only debug 
         if level == 'Debug':
@@ -245,244 +257,49 @@ class FacadeHelper():
     def inc_repos_processed(self):
         self.repos_processed += 1
 
-"""
-class FacadeConfig:
-    \"""Legacy facade config that holds facade's database functionality
-        
-        This is mainly for compatibility with older functions from legacy facade.
+    def run_git_command(self, cmd: str, timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
+        """
+        Execute a git command with timeout handling.
 
-        Initializes database when it encounters a database exception
+        This method provides a unified interface for running git commands with
+        consistent timeout handling and error logging across all facade operations.
 
-    Attributes:
-        repos_processed (int): Counter for how many repos have been analyzed
-        cursor (psycopg2.extensions.cursor): database cursor for legacy facade.
-        logger (Logger): logger object inherited from the session object
-        db (psycopg2.extensions.connection): database connection object for legacy facade.
-        tool_source (str): String marking the source of data as from facade.
-        data_source (str): String indicating that facade gets data from git
-        tool_version (str): Facade version
-        worker_options (dict): Config options for facade.
-        log_level (str): Keyword indicating level of logging for legacy facade.
-    \"""
-    def __init__(self, logger: Logger):
-        self.repos_processed = 0
-        self.cursor = None
-        self.logger = logger
+        Args:
+            cmd: The git command to execute
+            timeout: Timeout in seconds
+            capture_output: If True, capture stdout/stderr; if False, discard them
+            operation_description: Human-readable description for error logging
+                                 (defaults to cmd if not provided)
 
-        self.db = None
-        
-        #init db first thing 
-        db_credentials = get_database_args_from_env()
-
-        # Set up the database
-        db_user = db_credentials["db_user"]
-        db_pass = db_credentials["db_pass"]
-        db_name = db_credentials["db_name"]
-        db_host = db_credentials["db_host"]
-        db_port = db_credentials["db_port"]
-        db_user_people = db_user
-        db_pass_people = db_pass
-        db_name_people = db_name
-        db_host_people = db_host
-        db_port_people = db_port
-        # Open a general-purpose connection
-        db,cursor = self.database_connection(
-            db_host,
-            db_user,
-            db_pass,
-            db_name,
-            db_port, False, False)
-
-        #worker_options = read_config("Workers", "facade_worker", None, None)
-
-        with DatabaseSession(logger, engine) as session:
-            config = AugurConfig(logger, session)
-            worker_options = config.get_section("Facade")
-
-        if 'repo_directory' in worker_options:
-            self.repo_base_directory = worker_options['repo_directory']
-        else:
-            self.log_activity('Error',"Please specify a \'repo_directory\' parameter"
-                " in your \'Workers\' -> \'facade_worker\' object in your config "
-                "to the directory in which you want to clone repos. Exiting...")
-            sys.exit(1)
-
-        self.tool_source = '\'Facade \''
-        self.tool_version = '\'1.3.0\''
-        self.data_source = '\'Git Log\''
-
-        self.worker_options = worker_options
-
-        # Figure out how much we're going to log
-        #logging.basicConfig(filename='worker_{}.log'.format(worker_options['port']), filemode='w', level=logging.INFO)
-        self.log_level = None #self.get_setting('log_level')
-
-
-    #### Database update functions ####
-
-    def increment_db(self, version):
-
-        # Helper function to increment the database number
-
-        increment_db = ("INSERT INTO settings (setting,value) "
-            "VALUES ('database_version',%s)")
-        self.cursor.execute(increment_db, (version, ))
-        db.commit()
-
-        print("Database updated to version: %s" % version)
-
-    def update_db(self, version):
-
-        # This function should incrementally step any version of the database up to
-        # the current schema. After executing the database operations, call
-        # increment_db to bring it up to the version with which it is now compliant.
-
-        print("Legacy Facade Block for DB UPDATE. No longer used. ")
-
-        print("No further database updates.\n")
-
-    def migrate_database_config(self):
-
-    # Since we're changing the way we store database credentials, we need a way to
-    # transparently migrate anybody who was using the old file. Someday after a long
-    # while this can disappear.
+        Returns:
+            tuple: (return_code, stdout_content)
+                   return_code is -1 on timeout
+                   stdout_content is empty string if capture_output=False
+        """
+        if operation_description is None:
+            operation_description = cmd
 
         try:
-            # If the old database config was found, write a new config
-            imp.find_module('db')
+            # Common options for all subprocess.run calls
+            run_options = {
+                'shell': True,
+                'timeout': timeout,
+                'check': False
+            }
 
-            db_config = configparser.ConfigParser()
+            # Add capture_output-specific options
+            if capture_output:
+                run_options['capture_output'] = True
+                run_options['encoding'] = 'utf-8'
+                run_options['errors'] = 'replace'
+            else:
+                run_options['stdout'] = subprocess.DEVNULL
+                run_options['stderr'] = subprocess.DEVNULL
 
-            from db import db_user,db_pass,db_name,db_host
-            from db import db_user_people,db_pass_people,db_name_people,db_host_people
+            result = subprocess.run(cmd, **run_options)
 
-            db_config.add_section('main_database')
-            db_config.set('main_database','user',db_user)
-            db_config.set('main_database','pass',db_pass)
-            db_config.set('main_database','name',db_name)
-            db_config.set('main_database','host',db_host)
-
-            db_config.add_section('people_database')
-            db_config.set('people_database','user',db_user_people)
-            db_config.set('people_database','pass',db_pass_people)
-            db_config.set('people_database','name',db_name_people)
-            db_config.set('people_database','host',db_host_people)
-
-            with open('db.cfg','w') as db_file:
-                db_config.write(db_file)
-
-            print("Migrated old style config file to new.")
-        except:
-            # If nothing is found, the user probably hasn't run setup yet.
-            sys.exit("Can't find database config. Have you run setup.py?")
-
-        try:
-            os.remove('db.py')
-            os.remove('db.pyc')
-            print("Removed unneeded config files")
-        except:
-            print("Attempted to remove unneeded config files")
-
-        return db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people
-
-    #### Global helper functions ####
-
-    def database_connection(self, db_host,db_user,db_pass,db_name, db_port, people, multi_threaded_connection):
-
-    # Return a database connection based upon which interpreter we're using. CPython
-    # can use any database connection, although MySQLdb is preferred over pymysql
-    # for performance reasons. However, PyPy can't use MySQLdb at this point,
-    # instead requiring a pure python MySQL client. This function returns a database
-    # connection that should provide maximum performance depending upon the
-    # interpreter in use.
-
-    ##TODO: Postgres connections as we make them ARE threadsafe. We *could* refactor this accordingly: https://www.psycopg.org/docs/connection.html #noturgent
-
-
-        # if platform.python_implementation() == 'PyPy':
-        db_schema = 'augur_data'
-        db = psycopg2.connect(
-            host = db_host,
-            user = db_user,
-            password = db_pass,
-            database = db_name,
-            # charset = 'utf8mb4',
-            port = db_port,
-            options=f'-c search_path={db_schema}',
-            connect_timeout = 31536000,)
-
-        cursor = db.cursor()#pymysql.cursors.DictCursor)
-
-
-        self.cursor = cursor
-        self.db = db
-
-        # Figure out how much we're going to log
-        #self.log_level = self.get_setting('log_level')
-        #Not getting debug logging for some reason.
-        self.log_level = 'Debug'
-        return db, cursor
-
-    def get_setting(self, setting):
-
-    # Get a setting from the database
-
-        query = (\"""SELECT value FROM settings WHERE setting=%s ORDER BY
-            last_modified DESC LIMIT 1\""")
-        self.cursor.execute(query, (setting, ))
-        # print(type(self.cursor.fetchone()))
-        return self.cursor.fetchone()[0]#["value"]
-
-    def update_status(self, status):
-
-    # Update the status displayed in the UI
-
-        query = ("UPDATE settings SET value=%s WHERE setting='utility_status'")
-        self.cursor.execute(query, (status, ))
-        self.db.commit()
-
-    def log_activity(self, level, status):
-
-    # Log an activity based upon urgency and user's preference.  If the log level is
-    # "Debug", then just print it and don't save it in the database.
-
-        log_options = ('Error','Quiet','Info','Verbose','Debug')
-        self.logger.info("* %s\n" % status)
-        if self.log_level == 'Debug' and level == 'Debug':
-            return
-
-        #if log_options.index(level) <= log_options.index(self.log_level):
-        query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
-        try:
-            self.cursor.execute(query, (level, status))
-            self.db.commit()
-        except Exception as e:
-            self.logger.info('Error encountered: {}\n'.format(e))
-
-            db_credentials = get_database_args_from_env()
-
-            # Set up the database
-            db_user = db_credentials["db_user"]
-            db_pass = db_credentials["db_pass"]
-            db_name = db_credentials["db_name"]
-            db_host = db_credentials["db_host"]
-            db_port = db_credentials["db_port"]
-            db_user_people = db_user
-            db_pass_people = db_pass
-            db_name_people = db_name
-            db_host_people = db_host
-            db_port_people = db_port
-            # Open a general-purpose connection
-            db,cursor = self.database_connection(
-                db_host,
-                db_user,
-                db_pass,
-                db_name,
-                db_port, False, False)
-            self.cursor.execute(query, (level, status))
-            self.db.commit()
-
-
-
-
-"""
+            # Return appropriate output based on capture_output flag
+            return result.returncode, (result.stdout.strip() if capture_output else '')
+        except subprocess.TimeoutExpired:
+            self.log_activity('Error', f'Git operation timed out: {operation_description}')
+            return -1, ''

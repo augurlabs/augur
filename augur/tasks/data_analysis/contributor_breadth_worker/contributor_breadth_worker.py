@@ -20,7 +20,7 @@ def contributor_breadth_model(self) -> None:
 
     engine = self.app.engine
 
-    logger = logging.getLogger(contributor_breadth_model.__name__)
+    logger = logging.getLogger(__name__)
 
     tool_source = 'Contributor Breadth Worker'
     tool_version = '0.0.1'
@@ -89,7 +89,7 @@ def contributor_breadth_model(self) -> None:
     total = len(current_cntrb_logins)
     for cntrb in current_cntrb_logins:
 
-        print(f"Processing cntrb {index} of {total}")
+        logger.info(f"Processing cntrb {index} of {total}")
         index += 1
 
         repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
@@ -129,18 +129,32 @@ def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_ve
 
     cntrb_repos_insert = []
     for event_id_api in cntrb_events:
-
+        
+        repo = event_id_api.get("repo")
+        
+        if not repo or not repo.get("url"):
+            logger.warning(
+                "Skipping GitHub event due to empty repo or missing repo.url",
+                extra={
+                    "event_id": event_id_api.get("id"),
+                    "event_type": event_id_api.get("type"),
+                    "public": event_id_api.get("public"),
+                    "repo": repo,
+                },
+            )
+            continue
+        
         cntrb_repos_insert.append({
             "cntrb_id": cntrb['cntrb_id'],
-            "repo_git": event_id_api['repo']['url'],
+            "repo_git": repo['url'],
             "tool_source": tool_source,
             "tool_version": tool_version,
             "data_source": data_source,
-            "repo_name": event_id_api['repo']['name'],
-            "gh_repo_id": event_id_api['repo']['id'],
-            "cntrb_category": event_id_api['type'],
+            "repo_name": repo['name'],
+            "gh_repo_id": repo['id'],
+            "cntrb_category": event_id_api.get('type'),
             "event_id": int(event_id_api['id']),
-            "created_at": event_id_api['created_at']
+            "created_at": event_id_api.get('created_at')
         })
 
     return cntrb_repos_insert

@@ -70,34 +70,6 @@ loadSettings()
 
 #version_check(settings)
 
-""" ----------------------------------------------------------------
-"""
-def loadReports():
-    global reports
-    try:
-        with open(getSetting("reports")) as file:
-            reports = yaml.load(file, Loader=yaml.FullLoader)
-            id = -1
-            for report in reports:
-                for image in reports[report]:
-                    image['id'] = id = id + 1
-        return True
-    except Exception as err:
-        logger.error(f"An exception occurred reading reports endpoints from [{getSetting('reports')}]:")
-        logger.error(err)
-        try:
-            with open(getSetting("reports"), 'w') as file:
-                logger.info("Attempting to generate default reports.yml")
-                yaml.dump(reports, file)
-                logger.info("Default reports file successfully generated.")
-        except Exception as ioErr:
-            logger.error("Error creating default report configuration:")
-            logger.error(ioErr)
-        return False
-
-if not loadReports():
-    loadReports()
-    
 cache_files_requested = []
 
 """ ----------------------------------------------------------------
@@ -160,58 +132,6 @@ def download(url, cmanager, filename, image_cache, image_id, repo_id = None):
             logger.error("An exception occurred writing a cache file to disk")
             logger.error(err)
 
-""" ----------------------------------------------------------------
-"""
-def requestReports(repo_id):
-    # If this request has already been fulfilled, no need to process it again
-    if(repo_id in report_requests.keys()):
-        return
-
-    # initialize a new request entry to hold the resulting data
-    report_requests[repo_id] = {}
-    report_requests[repo_id]['complete'] = False
-
-    host = getSetting("host", "Server")
-    port = getSetting("port", "Server")
-
-    """ ----------
-        If the report definition could not be loaded, we cannot determine what
-        files to request from the backend to compose the report. Returning here
-        causes the completion status of the request to be False, which will
-        display an error message when sent to the frontend.
-    """
-    if reports is None:
-        return
-
-    threadPools = []
-    reportImages = {}
-    for report in reports:
-        # Reports is a dictionary of lists, so we get the size of each list
-        size = len(reports[report])
-
-        # Set up various threading components to manage image downloading
-        connection_mgr = urllib3.PoolManager(maxsize=size)
-        thread_pool = ThreadPoolExecutor(size)
-        threadPools.append(thread_pool)
-
-        for image in reports[report]:
-            # Where should the downloaded image be stored (in cache)
-            filename = toCacheFilename(f"{image['url']}?repo_id={repo_id}")
-            # Where are we downloading the image from
-            image_url = f"{host}:{port}" + url_for(image['url'], repo_id = repo_id)
-            # f"{getSetting('serving')}/{image['url']}?repo_id={repo_id}"
-            
-            # Add a request for this image to the thread pool using the download function
-            thread_pool.submit(download, image_url, connection_mgr, filename, reportImages, image['id'], repo_id)
-
-    # Wait for all connections to resolve, then clean up
-    for thread_pool in threadPools:
-        thread_pool.shutdown()
-
-    report_requests[repo_id]['images'] = reportImages
-
-    # Remove the request from the queue when completed
-    report_requests[repo_id]['complete'] = True
 
 """ ----------------------------------------------------------------
 renderRepos:

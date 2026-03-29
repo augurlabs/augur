@@ -20,7 +20,12 @@ class InvalidDataException(Exception):
     pass
 
 class GithubGraphQlDataAccess:
+    """Utilities for accessing the GitHub GraphQL API
+    """
     
+    @staticmethod
+    def base_url():
+        return URL
 
     def __init__(self, key_manager, logger: logging.Logger, ingore_not_found_error=False):
     

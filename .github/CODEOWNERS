@@ -1,32 +1,60 @@
+# API
+/augur/api/ @sgoggins
+
+/augur/api/view @Ulincsys 
+/augur/api/routes/user.py @Ulincsys 
+
+# CLI
 /augur/cli/ @sgoggins
-/augur/metrics/ @sgoggins @sgoggins
-/augur/housekeeper/ @sgoggins
-/augur/server.py @sgoggins @sgoggins
-/augur/application.py @sgoggins @sgoggins @sgoggins
-/augur/routes/ @sgoggins @sgoggins @sgoggins
 
-/frontend/ @sgoggins @sgoggins
+# Frontend
+/augur/templates/ @sgoggins
 
-/schema/ @sgoggins @sgoggins
+# Schema
+/augur/application/db/ @sgoggins
+/augur/application/schema/ @sgoggins
 
-/schema/generate @sgoggins 
+# Workers
+/augur/tasks @sgoggins
 
-/workers/ @sgoggins @sgoggins @sgoggins
+# Repo and Community Infrastructure
+/README.md @sgoggins @MoralCode
+/CONTRIBUTING.md @sgoggins @MoralCode
+/CONTRIBUTORS.md @sgoggins @MoralCode
+/MAINTAINERS.md @sgoggins @MoralCode
+/LICENSE @sgoggins
+/CODE_OF_CONDUCT.md @sgoggins
+SECURITY.md @sgoggins @MoralCode
+.github/ @sgoggins @MoralCode 
+pyproject.toml @sgoggins
 
-/README.md @sgoggins @sgoggins
-/CONTRIBUTING.md @sgoggins @sgoggins
-/LICENSE @sgoggins @sgoggins
-/CODE_OF_CONDUCT.md @sgoggins @sgoggins
+# Testing
+/tests/ @MoralCode
+/scripts/ci @MoralCode
 
-/tests/ @sgoggins
-/util/docker @sgoggins
-/scripts/ @sgoggins
-/docs/ @sgoggins
-/.dockerignore @sgoggins
-/.travis.yml @sgoggins
-*compose.yml @sgoggins
-/readthedocs.yml @sgoggins
+# Keyman
+/keyman @Ulincsys
+/tests/test_key_manager @Ulincsys
+
+# Docs
+/docs/ @sgoggins @MoralCode
+/readthedocs.yml @sgoggins @MoralCode
+
+# Install - Manual
 /Makefile @sgoggins
-/tox.ini @sgoggins
-*requirements.txt @sgoggins
-/setup.py @sgoggins @sgoggins
+/scripts/control @sgoggins
+/scripts/install @sgoggins
+/scripts/mat_view_explore @sgoggins
+
+# Install - Containers
+/docker @MoralCode
+/scripts/docker @MoralCode
+
+/.dockerignore @MoralCode
+*compose.yml @MoralCode
+
+# Misc
+/augur/metrics/ @sgoggins
+/augur/server.py @sgoggins
+/augur/application.py @sgoggins
+/augur/application/config.py @MoralCode

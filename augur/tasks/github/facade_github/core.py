@@ -4,12 +4,13 @@ from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import GithubUUID
 from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
+from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
 from augur.tasks.github.util.github_data_access import GithubDataAccess
 
 
 
 
-def query_github_contributors(logger, key_auth, github_url):
+def query_github_contributors(logger, key_auth, github_url, tool_source:str, tool_version:str, data_source:str):
 
     """ Data collection function
     Query the GitHub API for contributors
@@ -62,59 +63,7 @@ def query_github_contributors(logger, key_auth, github_url):
 
             contributor = github_data_access.get_resource(cntrb_url)
 
-            #logger.info(f"Contributor: {contributor} \n")
-            company = None
-            location = None
-            email = None
-            if 'company' in contributor:
-                company = contributor['company']
-            if 'location' in contributor:
-                location = contributor['location']
-            if 'email' in contributor:
-                email = contributor['email']
-                canonical_email = contributor['email']
-
-            #TODO get and store an owner id
-            
-            #Generate ID for cntrb table
-            #cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
-            cntrb_id = GithubUUID()
-            cntrb_id["user"] = int(contributor['id'])
-            cntrb_id["platform"] = platform_id
-
-            cntrb = {
-                "cntrb_id" : cntrb_id.to_UUID(),
-                "cntrb_login": contributor['login'],
-                "cntrb_created_at": contributor['created_at'],
-                "cntrb_email": email,
-                "cntrb_company": company,
-                "cntrb_location": location,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": canonical_email,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'], #This is what we are dup checking
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
-                "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
-                #"tool_source": session.tool_source,
-                #"tool_version": session.tool_version,
-                #"data_source": session.data_source
-            }
+            cntrb = extract_github_contributor(contributor, tool_source, tool_version, data_source)
 
             #insert cntrb to table.
             #session.logger.info(f"Contributor:  {cntrb}  \n")
@@ -127,8 +76,8 @@ def query_github_contributors(logger, key_auth, github_url):
 
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
-def grab_committer_list(logger, key_auth, repo_git, platform="github"):
+def grab_committer_list(logger, key_auth, repo_git, tool_source: str, tool_version: str, data_source: str, platform="github" ):
 
     # Create API endpoint from repo_id
-    query_github_contributors(logger, key_auth, repo_git)
+    query_github_contributors(logger, key_auth, repo_git, tool_source, tool_version, data_source)
     

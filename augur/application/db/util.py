@@ -58,3 +58,33 @@ def convert_orm_list_to_dict_list(result):
     
     return new_list
 
+
+
+def convert_type_of_value(config_dict, logger=None):
+        
+    data_type = config_dict["type"]
+
+    if data_type == "str" or data_type is None:
+        return config_dict
+
+    elif data_type == "int":
+        config_dict["value"] = int(config_dict["value"])
+
+    elif data_type == "bool":
+        value = config_dict["value"]
+        
+        if value.lower() == "false":
+            config_dict["value"] = False
+        else:
+            config_dict["value"] = True
+
+    elif data_type == "float":
+        config_dict["value"] = float(config_dict["value"])
+
+    else:
+        if logger:
+            logger.error(f"Need to add support for {data_type} types to config") 
+        else:
+            print(f"Need to add support for {data_type} types to config")
+
+    return config_dict

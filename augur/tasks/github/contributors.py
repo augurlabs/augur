@@ -8,8 +8,11 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
+from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
+
 from augur.application.db.lib import bulk_insert_dicts, get_session, batch_insert_contributors
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+import json
 
 
 
@@ -18,7 +21,7 @@ def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
 
-    tool_source = "Contributors task"
+    tool_source = "Process Contributors task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -26,7 +29,15 @@ def process_contributors():
 
     with get_session() as session:
 
-        query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
+        query = (
+            session.query(Contributor)
+            .filter(
+                Contributor.data_source == data_source,
+                Contributor.cntrb_created_at.is_(None),
+                Contributor.cntrb_last_used.is_(None)
+            )
+            .limit(500)
+        )
         contributors = execute_session_query(query, 'all')
 
     contributors_len = len(contributors)
@@ -47,16 +58,20 @@ def process_contributors():
 
         url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-        data = retrieve_dict_data(url, key_auth, logger)
-
-        if data is None:
-            print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+        try:
+            data = retrieve_dict_data(url, key_auth, logger)
+        except json.JSONDecodeError as e:
+            logger.error(f"Encountered error parsing JSON in call to {url}")
+            logger.info(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
             continue
 
-        new_contributor_data = {
-            "cntrb_created_at": data["created_at"],
-            "cntrb_last_used": data["updated_at"]
-        }
+        if data is None:
+            logger.info(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+            continue
+
+
+        new_contributor_data = extract_github_contributor(data, tool_source, tool_version, data_source)
+        
 
         contributor_dict.update(new_contributor_data)
 
@@ -109,13 +124,17 @@ def retrieve_dict_data(url: str, key_auth, logger):
 @celery.task(base=AugurCoreRepoCollectionTask, bind=True)
 def grab_comitters(self, repo_git,platform="github"):
 
+    tool_source = "Committers task"
+    tool_version = "1.0"
+    data_source = "Github API"
+
     engine = self.app.engine
 
     logger = logging.getLogger(grab_comitters.__name__)
 
     try:
         key_auth = GithubRandomKeyAuth(logger)
-        grab_committer_list(logger, key_auth, repo_git, platform)
+        grab_committer_list(logger, key_auth, repo_git, tool_source, tool_version, data_source, platform)
     except Exception as e:
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 

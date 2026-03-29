@@ -9,7 +9,7 @@ This section details describes production deployment of Augur.
 
    server-deployment
    nginx-configuration
-
+   how_to_run_augur_in_production
 
 **THIS SECTION IS UNDER CONSTRUCTION.**
 

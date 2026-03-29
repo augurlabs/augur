@@ -7,12 +7,15 @@ Now, as a new member, it can be overwhelming to navigate and sift through all th
 
 A few first things to do:
 
-1. Join the slack channel, that's the fastest way to join and be a part of the community.
+1. Join the slack channel, that's the fastest way to join and be a part of the community. 
+You can join using this invite link: 
+`Join the CHAOSS Slack Workspace <https://join.slack.com/t/chaoss-workspace/shared_invite/zt-3hmaf3urr-boLCd7nRgcAvvfbWcqJJVw>`_
 
     .. image:: images/slack.jpg
         :width: 400
         :alt: "Slack logo"
-
+        :target: https://join.slack.com/t/chaoss-workspace/shared_invite/zt-3hmaf3urr-boLCd7nRgcAvvfbWcqJJVw
+        
 2. Introduce yourself to the #newcomers channel. Say hi, it'd help others get to know you and point you in the right direction. In case you're unsure, here's a format you can use:
 
     * Name

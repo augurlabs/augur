@@ -38,41 +38,44 @@ def add_user(username, email, firstname, lastname, admin, phone_number, password
     """Add a new user to the database with email address = EMAIL."""
 
     session = Session()
+    try:
+        if session.query(User).filter(User.login_name == username).first() is not None:
+            return click.echo("username already taken")
 
-    if session.query(User).filter(User.login_name == username).first() is not None:
-        return click.echo("username already taken")
+        if session.query(User).filter(User.email == email).first() is not None:
+            return click.echo("email already signed-up")
 
-    if session.query(User).filter(User.email == email).first() is not None:
-        return click.echo("email already signed-up")
+        user = session.query(User).filter(User.login_name == username).first()
+        if not user:
+            password = User.compute_hashsed_password(password)
+            new_user = User(login_name=username, login_hashword=password, email=email, text_phone=phone_number, first_name=firstname, last_name=lastname, admin=admin, tool_source="User CLI", tool_version=None, data_source="CLI")
+            session.add(new_user)
+            session.commit()
+            user_type = "admin user" if admin else "user"
+            message = f"Successfully added new: {username}"
+            click.secho(message, bold=True)
 
-    user = session.query(User).filter(User.login_name == username).first()
-    if not user:
-        password = User.compute_hashsed_password(password)
-        new_user = User(login_name=username, login_hashword=password, email=email, text_phone=phone_number, first_name=firstname, last_name=lastname, admin=admin, tool_source="User CLI", tool_version=None, data_source="CLI")
-        session.add(new_user)
-        session.commit()
-        user_type = "admin user" if admin else "user"
-        message = f"Successfully added new: {username}"
-        click.secho(message, bold=True)
-
+            return 0
+    finally:
         session.close()
         engine.dispose()
-        
-        return 0
 
 @cli.command('password_reset', short_help="Reset a user's password")
 @click.argument("username")
 @click.password_option(help="New password")
 def reset_password(username, password):
     session = Session()
+    try:
+        user = session.query(User).filter(User.login_name == username).first()
 
-    user = session.query(User).filter(User.login_name == username).first()
+        if not user:
+            return click.echo("invalid username")
 
-    if not user:
-        return click.echo("invalid username")
-    
-    password = User.compute_hashsed_password(password)
-    user.login_hashword = password
-    session.commit()
+        password = User.compute_hashsed_password(password)
+        user.login_hashword = password
+        session.commit()
 
-    return click.echo("Password updated")
+        return click.echo("Password updated")
+    finally:
+        session.close()
+        engine.dispose()

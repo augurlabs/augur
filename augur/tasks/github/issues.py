@@ -1,6 +1,6 @@
 import logging
 import traceback
-from datetime import timedelta, timezone
+from datetime import timedelta, timezone, datetime
 
 from sqlalchemy.exc import IntegrityError
 
@@ -12,17 +12,30 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee
 from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors, get_batch_size
+
 
 
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issues(repo_git : str, full_collection: bool) -> int:
+def collect_issues(repo_git: str, full_collection: bool) -> int:
+    """
+    Collect all issues (excluding pull requests) for a repository.
 
-    logger = logging.getLogger(collect_issues.__name__) 
+    Retrieves issues from GitHub API in batches of 1000 and inserts them along with
+    related labels, assignees, and contributors.
+
+    Args:
+        repo_git: Full git URL (e.g., 'https://github.com/chaoss/augur')
+        full_collection: True for all historical data, False for incremental (last collection - 2 days)
+
+    Returns:
+        Number of issues collected, or -1 on error
+    """
+    logger = logging.getLogger(collect_issues.__name__)
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
@@ -31,33 +44,61 @@ def collect_issues(repo_git : str, full_collection: bool) -> int:
     if full_collection:
         core_data_last_collected = None
     else:
-        # subtract 2 days to ensure all data is collected 
+        # Subtract 2 days to ensure all data is collected
         core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
     key_auth = GithubRandomKeyAuth(logger)
 
     logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
 
-    try:    
-        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
+    try:
+        issue_data_generator = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
 
-        if not issue_data:
+        issue_batch_size = get_batch_size()
+
+        # Process issues in batches to avoid memory spikes
+        batch = []
+        total_issues = 0
+
+        for issue in issue_data_generator:
+            batch.append(issue)
+
+            if len(batch) >= issue_batch_size:
+                logger.info(f"{owner}/{repo}: Processing batch of {len(batch)} issues (total so far: {total_issues + len(batch)})")
+                process_issues(batch, f"{owner}/{repo}: Issue task", repo_id, logger)
+                total_issues += len(batch)
+                batch.clear()
+
+        # Process remaining issues in the last batch
+        if len(batch) > 0:
+            logger.info(f"{owner}/{repo}: Processing final batch of {len(batch)} issues")
+            process_issues(batch, f"{owner}/{repo}: Issue task", repo_id, logger)
+            total_issues += len(batch)
+
+        if total_issues == 0:
             logger.info(f"{owner}/{repo} has no issues")
-            return 0
-
-        total_issues = len(issue_data)
-        process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
 
         return total_issues
-            
+
     except Exception as e:
         logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
         return -1
 
 
 
-def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
+def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: GithubRandomKeyAuth, since: datetime | None = None):
+    """
+    Retrieve all issue data for a repository as a generator.
 
+    Returns a generator to avoid materializing all issues in memory at once.
+    This is critical for repos with 10,000+ issues to prevent memory spikes.
+
+    Args:
+        repo_git (str): The GitHub repository in "owner/repo" format.
+        logger (logging.Logger): Logger for logging messages.
+        key_auth (GithubRandomKeyAuth): Auth handler for GitHub API.
+        since (datetime, optional): Only issues updated since this datetime will be retrieved.
+    """
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting issues for {owner}/{repo}")
@@ -74,7 +115,8 @@ def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
 
     issues_paginator = github_data_access.paginate_resource(url)
 
-    return list(issues_paginator)
+    # Return the generator directly instead of materializing it
+    return issues_paginator
     
 def process_issues(issues, task_name, repo_id, logger) -> None:
     

@@ -93,7 +93,7 @@ def is_archived(logger, repo_data):
     return False
 
 def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
-    url = 'https://api.github.com/graphql'
+    url = GithubGraphQlDataAccess.base_url()
     # Hit the graphql endpoint and retry 3 times in case of failure
     logger.info("Hitting endpoint: {} ...\n".format(url))
     data = request_graphql_dict(key_auth, logger, url, query)
