@@ -32,3 +32,8 @@ def test_when_both_empty_strings():
     name, email = check_swapped_emails("", "")
     assert name == ""
     assert email == ""
+
+def test_email_with_multiple_at_signs():
+    name, email = check_swapped_emails("John Smith", "john@@gmail.com")
+    assert name == "John Smith"
+    assert email == "john@@gmail.com"
