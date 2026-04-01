@@ -63,13 +63,8 @@ def get_database_string() -> str:
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
-    try:
-        current_dir = os.getcwd()
-    except FileNotFoundError:
-        print("\n\nPlease run augur commands in the root directory\n\n")
-        sys.exit()
-
-    db_json_file_location = current_dir + "/db.config.json"
+    from augur.application.config import ConfigPaths
+    db_json_file_location = ConfigPaths.db_config()
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not augur_db_environment_var and not db_json_exists:
@@ -81,8 +76,7 @@ def get_database_string() -> str:
         return augur_db_environment_var
 
 
-    with open("db.config.json", 'r') as f:
-        db_config = json.load(f)
+    db_config = ConfigPaths.read_db_config()
 
     db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
 
