@@ -384,7 +384,7 @@ def clone_repos():
                 setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
                 session.commit()
 
-            clone_repos.si().apply_async(countdown=60*5)
+    clone_repos.si().apply_async(countdown=60*5)
 
 
 #@celery.task(bind=True)
