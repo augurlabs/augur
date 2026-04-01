@@ -560,7 +560,7 @@ def update_issue_closed_cntrbs_by_repo_id(repo_id):
         )
 
     if update_data:
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             update_stmt = s.text("""
                 UPDATE issues
                 SET cntrb_id = :cntrb_id
