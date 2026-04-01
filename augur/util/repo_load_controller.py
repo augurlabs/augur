@@ -61,7 +61,7 @@ class RepoLoadController:
             try:
                 repo_type = result[1]["repo_type"]
             except KeyError:
-                print("Skipping repo type...")
+                logger.debug("Skipping repo type...")
 
 
         # if the repo doesn't exist it adds it
@@ -94,32 +94,31 @@ class RepoLoadController:
         repos = result[0]
         type = result[1]["owner_type"]
         if not repos:
-            print(
-                f"No organization with name {org_name} could be found")
+            logger.warning(f"No organization with name {org_name} could be found")
             return {"status": "No organization found"}
 
         # check if the repo group already exists
         query = self.session.query(RepoGroup).filter(RepoGroup.rg_name == org_name)
         rg = execute_session_query(query, 'first')
         if rg:
-            print(f"{rg.rg_name} is already a repo group")
+            logger.info(f"{rg.rg_name} is already a repo group")
 
             return {"status": "Already a repo group"}
 
-        print(f'Organization "{org_name}" found')
+        logger.info(f'Organization "{org_name}" found')
 
         rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
                     tool_source="Loaded by user", tool_version="1.0", data_source="Git")
         self.session.add(rg)
         self.session.commit()
         repo_group_id = rg.repo_group_id
-        print(f"{org_name} repo group created")
+        logger.info(f"{org_name} repo group created")
 
         for repo_url in repos:
-            print(f"Adding {repo_url}")
+            logger.info(f"Adding {repo_url}")
             result, status = self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id}, from_org_list=True, repo_type=type)
             if not result:
-                print(status["status"])
+                logger.warning(status["status"])
 
         return {"status": "Org added"}
 
@@ -127,26 +126,26 @@ class RepoLoadController:
     def paginate_repos(self, source, page=0, page_size=25, sort="repo_id", direction="ASC", **kwargs):
 
         if not source:
-            print("Func: paginate_repos. Error: Source Required")
+            logger.error("Func: paginate_repos. Error: Source Required")
             return None, {"status": "Source Required"}
 
         if source not in ["all", "user", "group"]:
-            print("Func: paginate_repos. Error: Invalid source")
+            logger.error("Func: paginate_repos. Error: Invalid source")
             return None, {"Invalid source"}
 
         if direction and direction != "ASC" and direction != "DESC":
-            print("Func: paginate_repos. Error: Invalid direction")
+            logger.error("Func: paginate_repos. Error: Invalid direction")
             return None, {"status": "Invalid direction"}
 
         try:
             page = int(page) if page else 0
             page_size = int(page_size) if page else 25
         except TypeError:
-            print("Func: paginate_repos. Error: Page size and page should be integers")
+            logger.error("Func: paginate_repos. Error: Page size and page should be integers")
             return None, {"status": "Page size and page should be integers"}
 
         if page < 0 or page_size < 0:
-            print("Func: paginate_repos. Error: Page size and page should be positive")
+            logger.error("Func: paginate_repos. Error: Page size and page should be positive")
             return None, {"status": "Page size and page should be postive"}
 
         order_by = sort if sort else "repo_id"
@@ -183,11 +182,11 @@ class RepoLoadController:
     def get_repo_count(self, source, **kwargs):
 
         if not source:
-            print("Func: get_repo_count. Error: Source Required")
+            logger.error("Func: get_repo_count. Error: Source Required")
             return None, {"status": "Source Required"}
 
         if source not in ["all", "user", "group"]:
-            print("Func: get_repo_count. Error: Invalid source")
+            logger.error("Func: get_repo_count. Error: Invalid source")
             return None, {"status": "Invalid source"}
         
         query, result = self.generate_repo_query(source, count=True, **kwargs)
