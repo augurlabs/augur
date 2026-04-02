@@ -8,7 +8,9 @@ else:
    
 import logging
 import yaml
+import traceback
 
+logger=logging.getLogger(__name__)
 
 #Files that would be parsed should be added here.
 file_list = [
@@ -41,9 +43,6 @@ require_regrex = re.compile(REQUIRE_REGEXP)
 requirement_regrex = re.compile(REQUIREMENTS_REGEXP)
 
 
-import logging
-import traceback
-
 def parse_requirement_txt(file_handle):
     deps = []
     file_name = getattr(file_handle, 'name', 'unknown')
@@ -53,13 +52,13 @@ def parse_requirement_txt(file_handle):
     for encoding in ['utf-8', 'utf-16', 'latin1']:
         try:
             manifest = raw_bytes.decode(encoding)
-            logging.debug(f"[{file_name}] Successfully decoded with encoding: {encoding}")
+            logger.debug(f"[{file_name}] Successfully decoded with encoding: {encoding}")
             break
         except UnicodeDecodeError:
             continue
     else:
-        logging.error(f"[{file_name}] Failed to decode with utf-8, utf-16, or latin1")
-        logging.error(traceback.format_exc())
+        logger.error(f"[{file_name}] Failed to decode with utf-8, utf-16, or latin1")
+        logger.error(traceback.format_exc())
         return []
 
     for line in manifest.splitlines():
@@ -106,7 +105,7 @@ def parse_pipfile(file_handle):
     try:
         manifest = tomllib.load(file_handle)
     except Exception as e:
-        logging.warning(f"Failed to parse Pipfile: {getattr(file_handle, 'name', 'unknown')}, error: {e}")
+        logger.warning(f"Failed to parse Pipfile: {getattr(file_handle, 'name', 'unknown')}, error: {e}")
         return []
 
     return map_dependencies_pipfile(manifest.get('packages', {}), 'runtime') + \
@@ -159,10 +158,10 @@ def parse_poetry(file_handle, repo_id=None, path=None):
     try:
         manifest = tomllib.load(file_handle)
     except tomllib.TomlDecodeError as e:
-        logging.warning(f"[Repo ID: {repo_id}] Skipping malformed TOML file: {file_name} at {path}, error: {e}")
+        logger.warning(f"[Repo ID: {repo_id}] Skipping malformed TOML file: {file_name} at {path}, error: {e}")
         return []
     except Exception as e:
-        logging.error(f"[Repo ID: {repo_id}] Unexpected error while loading TOML from {file_name} at {path}: {e}")
+        logger.error(f"[Repo ID: {repo_id}] Unexpected error while loading TOML from {file_name} at {path}: {e}")
         return []
 
     try:
@@ -170,7 +169,7 @@ def parse_poetry(file_handle, repo_id=None, path=None):
         return map_dependencies_pipfile(deps.get('dependencies', {}), 'runtime') + \
                map_dependencies_pipfile(deps.get('dev-dependencies', {}), 'develop')
     except Exception as e:
-        logging.error(f"[Repo ID: {repo_id}] Error parsing dependencies from {file_name} at {path}: {e}")
+        logger.error(f"[Repo ID: {repo_id}] Error parsing dependencies from {file_name} at {path}: {e}")
         return []
 
 
@@ -204,10 +203,10 @@ def parse_conda(file_handle):
     dependencies = contents.get('dependencies', [])
     
     if not dependencies:
-        print("No dependencies found.")
+        logger.info("No dependencies found.")
         return []
     else:
-        print("Dependencies found.")
+        logger.info("Dependencies found.")
     for dep in dependencies:
         if (type(dep) is dict) and dep['pip']:
             pip = dep
