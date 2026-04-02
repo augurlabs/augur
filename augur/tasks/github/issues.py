@@ -103,13 +103,13 @@ def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: Git
 
     logger.info(f"Collecting issues for {owner}/{repo}")
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    url = github_data_access.issues_endpoint_url(owner, repo, trailing_slash=False) + "?state=all"
 
     if since:
         url += f"&since={since.isoformat()}"
-
-    github_data_access = GithubDataAccess(key_auth, logger)
-
+    
     num_pages = github_data_access.get_resource_page_count(url)
     logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of issues")
 

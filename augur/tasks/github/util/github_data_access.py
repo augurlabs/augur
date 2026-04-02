@@ -5,6 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 from augur.util.keys import mask_key
+import urllib.parse
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -35,6 +36,114 @@ class ResourceGoneException(Exception):
         super().__init__(message)
 
 class GithubDataAccess:
+    """Utilities for accessing the GitHub REST API
+    
+    Public facing functions in this class should refrain from returning data in a structure
+    that is derived from githubs API responses to keep all platform-specific parsing here.
+    """
+
+    def _base_domain(self) -> str:
+        """the base domain against which api calls are assembled
+
+        Returns:
+            str: the base domain by itself
+        """
+        return "github.com"
+
+    def _base_url(self) -> str:
+        """the github base URL with HTTP scheme and trailing slash, suitable for building specific API urls.
+
+        Returns:
+            str: the base url
+        """
+        return f"https://api.{self._base_domain()}/"
+
+    def issues_endpoint_url(self, owner:str, repo:str, trailing_slash = True) -> str:
+        """the github REST API url for the issues endpoint
+
+        Args:
+            owner (str): the owner/org of the repo
+            repo (str): the repo name
+            trailing_slash (bool, optional): Whether to include the trailing slash or not. Defaults to True.
+
+        Returns:
+            str: the assembled URL with values filled in. Example: https://api.github.com/repos/owner/repo/issues/
+        """
+    
+        return f"{self._base_url()}repos/{owner}/{repo}/issues" + ("/" if trailing_slash else "")
+    
+    def contributors_endpoint_url(self, owner:str, repo:str, trailing_slash = True) -> str:
+        """the github REST API url for the contributors endpoint
+
+        Args:
+            owner (str): the owner/org of the repo
+            repo (str): the repo name
+            trailing_slash (bool, optional): Whether to include the trailing slash or not. Defaults to True.
+
+        Returns:
+            str: the assembled URL with values filled in. Example: https://api.github.com/repos/owner/repo/contributors/
+        """
+    
+        return f"{self._base_url()}repos/{owner}/{repo}/contributors" + ("/" if trailing_slash else "")
+
+    def user_endpoint_url(self, username:str, trailing_slash = True) -> str:
+        """the github REST API url for the users endpoint
+
+        Args:
+            username (str): the github username to query
+            trailing_slash (bool, optional): Whether to include the trailing slash or not. Defaults to True.
+
+        Returns:
+            str: the assembled URL with values filled in. Example: https://api.github.com/repos/owner/repo/contributors/
+        """
+    
+        return f"{self._base_url()}users/{username}" + ("/" if trailing_slash else "")
+
+    def user_endpoint_urls(self, username:str) -> dict:
+        """the github REST API urls beneath the users endpoint, in dict form.
+        Intended to enable the recreation of a subset of what is returned by the github API
+
+        Args:
+            username (str): the github username to query
+
+        Returns:
+            dict: a dict of various user sub urls like would be returned by github's API.
+        """
+        user_url = self.user_endpoint_url(username, trailing_slash=False)
+        return {
+            "url": user_url,
+            "html_url": f"https://github.com/{username}",
+            "followers_url": f"{user_url}/followers",
+            "following_url": user_url + "/following{/other_user}",
+            "gists_url": user_url + "/gists{/gist_id}",
+            "starred_url": user_url + "/starred{/owner}{/repo}",
+            "subscriptions_url": f"{user_url}/subscriptions",
+            "organizations_url": f"{user_url}/orgs",
+            "repos_url": f"{user_url}/repos",
+            "events_url": user_url + "/events{/privacy}",
+            "received_events_url": f"{user_url}/received_events",
+        }
+
+
+    def search_endpoint(self, topic: str, query: str) -> str:
+        """construct a github API call to perform a search
+
+        Args:
+            topic (str): the topic to search. Valid options are: users, code, commits, issues, labels, repositories, topics. 
+            query (str): the query string to search as you'd type it into githubs serach bar. Example: "email@example.com in:email type:user"
+
+        Raises:
+            ValueError: if an invalid topic is provided
+
+        Returns:
+            str: a URL that can be queried to perform the search
+        """
+        topic = topic.lower()
+        if topic not in ["users", "code", "commits", "issues", "labels", "repositories", "topics" ]:
+            raise ValueError(f"Invalid topic '{topic}' provided for searching github.")
+
+        return f"{self._base_url()}search/{topic}?q={urllib.parse.quote(query)}"
+
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
@@ -43,6 +152,16 @@ class GithubDataAccess:
         self.key_client = KeyClient(f"github_{feature}", logger)
         self.key = None
         self.expired_keys_for_request = []
+
+
+    def get_user(self, username:str):
+        url = self.user_endpoint_url(username)
+
+        return self.get_resource(url)
+
+    def perform_search(self, topic: str, query: str):
+        url = self.search_endpoint(topic, query)
+        return self.get_resource(url)
 
     def get_resource_count(self, url):
 
