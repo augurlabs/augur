@@ -93,7 +93,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
     engine = get_engine()
 
-    with engine.connect() as connection:
+    with engine.begin() as connection:
 
         if since:
              query = text(f"""
