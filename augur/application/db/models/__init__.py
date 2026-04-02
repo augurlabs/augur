@@ -67,6 +67,7 @@ from augur.application.db.models.augur_data import (
     PullRequestReviewMessageRef,
     CommitMessage,
     RepoClone,
+    ContributorEngagement,
 )
 
 from augur.application.db.models.spdx import (
