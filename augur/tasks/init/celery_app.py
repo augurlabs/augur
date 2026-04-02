@@ -236,13 +236,17 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
         #Do longer tasks less often
-        logger.info(f"Scheduling data analysis every 30 days")
-        thirty_days_in_seconds = 30*24*60*60
-        sender.add_periodic_task(thirty_days_in_seconds, non_repo_domain_tasks.s())
+        non_repo_domain_interval = int(config.get_value('Celery', 'non_repo_domain_tasks_interval_in_days'))
+        if non_repo_domain_interval > 0:
+            logger.info(f"Scheduling data analysis every {non_repo_domain_interval} days")
+            non_repo_domain_interval_in_seconds = non_repo_domain_interval * 24 * 60 * 60
+            sender.add_periodic_task(non_repo_domain_interval_in_seconds, non_repo_domain_tasks.s())
+        else:
+            logger.info(f"Data analysis task is disabled.")
 
         mat_views_interval = int(config.get_value('Celery', 'refresh_materialized_views_interval_in_days'))
         if mat_views_interval > 0: 
-            logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
+            logger.info(f"Scheduling refresh materialized view every {mat_views_interval} days")
             sender.add_periodic_task(datetime.timedelta(days=mat_views_interval), refresh_materialized_views.s())
         else:
             logger.info(f"Refresh materialized view task is disabled.")
@@ -250,14 +254,28 @@ def setup_periodic_tasks(sender, **kwargs):
         # logger.info(f"Scheduling update of collection weights on midnight each day")
         # sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
 
-        logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
-        sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
+        retry_errored_repos_interval = int(config.get_value('Celery', 'retry_errored_repos_interval_in_days'))
+        if retry_errored_repos_interval > 0:
+            logger.info(f"Scheduling retry errored repos every {retry_errored_repos_interval} days")
+            retry_errored_repos_interval_in_seconds = retry_errored_repos_interval * 24 * 60 * 60
+            sender.add_periodic_task(retry_errored_repos_interval_in_seconds, retry_errored_repos.s())
+        else:
+            logger.info(f"Retry errored repos task is disabled.")
 
-        one_hour_in_seconds = 60*60
-        sender.add_periodic_task(one_hour_in_seconds, process_contributors.s())
+        process_contributors_interval = int(config.get_value('Celery', 'process_contributors_interval_in_seconds'))
+        if process_contributors_interval > 0:
+            logger.info(f"Scheduling process contributors every {process_contributors_interval/3600} hours")
+            sender.add_periodic_task(process_contributors_interval, process_contributors.s())
+        else:
+            logger.info(f"Process contributors task is disabled.")
 
-        one_day_in_seconds = 24*60*60
-        sender.add_periodic_task(one_day_in_seconds, create_collection_status_records.s())
+        create_collection_status_records_interval = int(config.get_value('Celery', 'create_collection_status_records_interval_in_days'))
+        if create_collection_status_records_interval > 0:
+            logger.info(f"Scheduling create collection status records every {create_collection_status_records_interval} days")
+            create_collection_status_records_interval_in_seconds = create_collection_status_records_interval * 24 * 60 * 60
+            sender.add_periodic_task(create_collection_status_records_interval_in_seconds, create_collection_status_records.s())
+        else:
+            logger.info(f"Create collection status records task is disabled.")
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
