@@ -10,7 +10,7 @@ from augur.application.db.lib import get_session, get_repo_by_repo_git, get_repo
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
@@ -364,11 +364,10 @@ def clone_repos():
                 git_repo_initialize(facade_helper, session, repo_git)
                 session.commit()
 
-                # get the commit count
+                # get the commit count (still used for facade status checks)
                 commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
-                facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
-
-                update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
+                
+                update_facade_scheduling_fields(repo_git, commit_count)
 
                 # set repo to update
                 setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
@@ -396,20 +395,6 @@ def clone_repos():
 #
 #    facade_helper = FacadeHelper(logger)
 #        check_for_repo_updates(session, repo_git)
-
-@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
-def git_update_commit_count_weight(self, repo_git):
-
-    engine = self.app.engine
-    logger = logging.getLogger(git_update_commit_count_weight.__name__)
-    
-    # Change facade session to take in engine
-    facade_helper = FacadeHelper(logger)
-
-    commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
-    facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
-    
-    update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
@@ -487,7 +472,6 @@ def facade_phase(repo_git, full_collection):
     if not limited_run or (limited_run and pull_repos):
         facade_core_collection.append(git_repo_updates_facade_task.si(repo_git))
     
-    facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
 
     #Generate commit analysis task order.
     if not limited_run or (limited_run and run_analysis):

@@ -1207,11 +1207,6 @@ class CollectionStatus(Base):
     ml_data_last_collected = Column(TIMESTAMP)
     ml_task_id = Column(String)
 
-    core_weight = Column(BigInteger)
-    facade_weight = Column(BigInteger)
-    secondary_weight = Column(BigInteger)
-    ml_weight = Column(BigInteger)
-
     issue_pr_sum = Column(BigInteger)
     commit_sum = Column(BigInteger)
 
@@ -1220,42 +1215,31 @@ class CollectionStatus(Base):
     @staticmethod
     def insert(session, logger, repo_id):
         from augur.tasks.github.util.util import get_repo_weight_by_issue
-        from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
         repo = Repo.get_by_id(session, repo_id)
         repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
         pr_issue_count = 0
-        github_weight = 0
+        
         if "github" in repo_git:
-
             try:
                 pr_issue_count = get_repo_weight_by_issue(logger, repo_git)
-                #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
-                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
             except Exception as e:
                 pr_issue_count = None
-                github_weight = None
                 logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
         else:   
             try:
                 pr_issue_count = 0
-                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
             except Exception as e:
                 pr_issue_count = None
-                github_weight = None
                 logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
-
         record = {
             "repo_id": repo_id,
-            "issue_pr_sum": pr_issue_count,
-            "core_weight": github_weight,
-            "secondary_weight": github_weight,
-            "ml_weight": github_weight
+            "issue_pr_sum": pr_issue_count
         }
      
 
