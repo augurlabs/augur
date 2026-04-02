@@ -9,6 +9,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
+from typing_extensions import deprecated
 
 from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
 from augur.tasks.util.collection_state import CollectionState
@@ -18,7 +19,7 @@ from augur.application.db.session import remove_duplicates_by_uniques, remove_nu
 
 logger = logging.getLogger("db_lib")
 
-
+@deprecated("This is a legacy method. Use AugurConfig.get_value instead")
 def get_value(section_name: str, setting_name: str) -> Optional[Any]:
     """Get the value of a setting from the config.
 
