@@ -198,10 +198,11 @@ def authorize_user():
 @app.route('/account/delete')
 @login_required
 def user_delete():
-    if current_user.delete()[0]:
+    if current_user.delete(db_session)[0]:
         flash(f"Account {current_user.login_name} successfully removed")
         logout_user()
     else:
+        logger.error(f"Exception occurred while deleting account {current_user.login_name}: {e}")
         flash("An error occurred removing the account")
 
     return redirect(url_for("root"))
