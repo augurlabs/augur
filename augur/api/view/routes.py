@@ -3,15 +3,22 @@ Defines the api routes for the augur views
 """
 import logging
 import math
+import os
+import signal
 from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
+from augur.api.util import admin_required, development_required
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy.exc import OperationalError
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
 from augur.application.util import *
 from augur.application.db.lib import get_value
+from augur.application.config import AugurConfig
 from ..server import app, db_session
+
+from augur.application.db.lib import get_session
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +119,10 @@ status:
 @app.route('/collection/status')
 def status_view():
     return render_module("status", title="Status")
+    
+@app.route('/connection_status')
+def server_ping_frontend():
+    return render_module("ping")
 
 """ ----------------------------------------------------------------
 login:
@@ -318,6 +329,7 @@ def user_group_view(group = None):
     return render_module("user-group-repos-table", title="Repos", repos=data, query_key=query, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
 
 @app.route('/error')
+@development_required
 def throw_exception():
     raise Exception("This Exception intentionally raised")
 
@@ -326,6 +338,7 @@ Admin dashboard:
     View the admin dashboard.
 """
 @app.route('/dashboard')
+@admin_required
 def dashboard_view():
     empty = [
         { "title": "Placeholder", "settings": [
@@ -337,6 +350,14 @@ def dashboard_view():
         ]}
     ]
 
-    backend_config = requestJson("config/get", False)
+    backend_config = AugurConfig(logger, db_session).load_config()
+    
+    with get_session() as session:
+        try:
+            users = session.query(User).all()
+        except OperationalError as e:
+            # Instruct Gunicorn to reboot workers to resolve database connection instability
+            os.kill(os.getpid(), signal.SIGTERM)
+            return "reloading"
 
-    return render_template('admin-dashboard.j2', sections = empty, config = backend_config)
+    return render_template('admin-dashboard.j2', sections = empty, config = backend_config, users = users)
