@@ -257,7 +257,7 @@ class FacadeHelper():
     def inc_repos_processed(self):
         self.repos_processed += 1
 
-    def run_git_command(self, cmd: str, timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
+    def run_git_command(self, cmd: list[str], timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
         """
         Execute a git command with timeout handling.
 
@@ -277,12 +277,11 @@ class FacadeHelper():
                    stdout_content is empty string if capture_output=False
         """
         if operation_description is None:
-            operation_description = cmd
+            operation_description = ' '.join(cmd)
 
         try:
             # Common options for all subprocess.run calls
             run_options = {
-                'shell': True,
                 'timeout': timeout,
                 'check': False
             }

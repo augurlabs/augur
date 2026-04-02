@@ -30,7 +30,7 @@ import subprocess
 import os
 import pathlib
 import sqlalchemy as s
-from .utilitymethods import update_repo_log, get_absolute_repo_path
+from .utilitymethods import update_repo_log, get_absolute_repo_path, parse_remote_default_branch
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
@@ -148,7 +148,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
 
         facade_helper.log_activity('Verbose', f"Cloning: {git}")
 
-        cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
+        cmd = ["git", "-C", repo_path, "clone", git, repo_name]
         return_code, _ = facade_helper.run_git_command(
             cmd,
             timeout=7200,  # 2 hours for large repos
@@ -320,7 +320,7 @@ def git_repo_updates(facade_helper, repo_git):
 
         try:
 
-            firstpull = (f"git -C {absolute_path} pull")
+            firstpull = ["git", "-C", absolute_path, "pull"]
 
             return_code_remote, _ = facade_helper.run_git_command(
                 firstpull,
@@ -340,24 +340,26 @@ def git_repo_updates(facade_helper, repo_git):
 
                 #                    session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-                getremotedefault = (
-                    f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+                getremotedefault = ["git", "-C", absolute_path, "remote", "show", "origin"]
 
-                return_code_remote, remotedefault = facade_helper.run_git_command(
+                return_code_remote, output = facade_helper.run_git_command(
                     getremotedefault,
                     timeout=60,  # 1 minute for remote query
                     capture_output=True,
                     operation_description='get remote default branch'
                 )
 
+                remotedefault = ""
+                if return_code_remote == 0 and output:
+                    remotedefault = parse_remote_default_branch(output)
+
                 facade_helper.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
 
-                getremotedefault = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
+                getremotedefault = ["git", "-C", absolute_path, "checkout", remotedefault]
 
                 facade_helper.log_activity(
-                    'Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
+                    'Verbose', f"get remote default command is: \n \n {' '.join(getremotedefault)} \n \n ")
 
                 return_code_remote_default_again, _ = facade_helper.run_git_command(
                     getremotedefault,
@@ -368,7 +370,7 @@ def git_repo_updates(facade_helper, repo_git):
 
                 if return_code_remote_default_again == 0:
                     facade_helper.log_activity('Verbose', "local checkout worked.")
-                    cmd = (f"git -C {absolute_path} pull")
+                    cmd = ["git", "-C", absolute_path, "pull"]
 
                     return_code, _ = facade_helper.run_git_command(
                         cmd,
@@ -384,7 +386,7 @@ def git_repo_updates(facade_helper, repo_git):
 
         finally:
 
-            cmd = (f"git -C {absolute_path} pull")
+            cmd = ["git", "-C", absolute_path, "pull"]
 
             return_code, _ = facade_helper.run_git_command(
                 cmd,
@@ -411,20 +413,22 @@ def git_repo_updates(facade_helper, repo_git):
 
 #                session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-            getremotedefault = (
-                f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+            getremotedefault = ["git", "-C", absolute_path, "remote", "show", "origin"]
 
-            return_code_remote, remotedefault = facade_helper.run_git_command(
+            return_code_remote, output = facade_helper.run_git_command(
                 getremotedefault,
                 timeout=60,  # 1 minute for remote query
                 capture_output=True,
                 operation_description='get remote default branch'
             )
 
+            remotedefault = ""
+            if return_code_remote == 0 and output:
+                remotedefault = parse_remote_default_branch(output)
+
             try:
 
-                getremotedefault = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
+                getremotedefault = ["git", "-C", absolute_path, "checkout", remotedefault]
 
                 return_code_remote_default, _ = facade_helper.run_git_command(
                     getremotedefault,
@@ -436,7 +440,7 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity(
                     'Verbose', f'get remote default result (return code): {return_code_remote_default}')
 
-                getcurrentbranch = (f"git -C {absolute_path} branch")
+                getcurrentbranch = ["git", "-C", absolute_path, "branch"]
 
                 return_code_local, localdefault = facade_helper.run_git_command(
                     getcurrentbranch,
@@ -448,8 +452,7 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity(
                     'Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')
 
-                cmd_checkout_default = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
+                cmd_checkout_default = ["git", "-C", absolute_path, "checkout", remotedefault]
 
                 cmd_checkout_default_wait, _ = facade_helper.run_git_command(
                     cmd_checkout_default,
@@ -458,9 +461,9 @@ def git_repo_updates(facade_helper, repo_git):
                     operation_description=f'git checkout {remotedefault}'
                 )
 
-                cmdpull2 = (f"git -C {absolute_path} pull")
+                cmdpull2 = ["git", "-C", absolute_path, "pull"]
 
-                cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
+                cmd_reset = ["git", "-C", absolute_path, "reset", "--hard", f"origin/{remotedefault}"]
 
                 cmd_reset_wait, _ = facade_helper.run_git_command(
                     cmd_reset,
@@ -469,7 +472,7 @@ def git_repo_updates(facade_helper, repo_git):
                     operation_description=f'git reset --hard origin/{remotedefault}'
                 )
 
-                cmd_clean = (f"git -C {absolute_path} clean -df")
+                cmd_clean = ["git", "-C", absolute_path, "clean", "-df"]
 
                 return_code_clean, _ = facade_helper.run_git_command(
                     cmd_clean,
@@ -483,9 +486,9 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity('Verbose', f'Second pass failed: {e}.')
                 pass
 
-        cmdpull2 = (f"git -C {absolute_path} pull")
+        cmdpull2 = ["git", "-C", absolute_path, "pull"]
 
-        print(cmdpull2)
+
         return_code, _ = facade_helper.run_git_command(
             cmdpull2,
             timeout=600,  # 10 minutes for git pull

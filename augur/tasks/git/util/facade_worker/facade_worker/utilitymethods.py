@@ -107,7 +107,7 @@ def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 
 def get_parent_commits_set(absolute_repo_path, facade_helper, logger=None):
 
-	cmd = "git --git-dir %s log --ignore-missing --pretty=format:'%%H'" % (absolute_repo_path)
+	cmd = ["git", "--git-dir", absolute_repo_path, "log", "--ignore-missing", "--pretty=format:%H"]
 
 	# Use facade_helper's unified git command runner
 	return_code, stdout = facade_helper.run_git_command(
@@ -219,4 +219,16 @@ def update_facade_scheduling_fields(repo_git, weight, commit_count):
 		session.commit()
 
 
-
+def parse_remote_default_branch(git_remote_output):
+	"""
+	Parses the output of 'git remote show origin' to find the HEAD branch.
+	"""
+	if not git_remote_output:
+		return ""
+		
+	for line in git_remote_output.split('\\n'):
+		if "HEAD branch" in line:
+			parts = line.split(":", 1)
+			if len(parts) > 1:
+				return parts[1].strip()
+	return ""
