@@ -95,4 +95,4 @@ This work has been funded through the Alfred P. Sloan Foundation, Mozilla, The R
 Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, others omitted due to the  memory limitations of project maintainers, and 15 Google Summer of Code Students. 
 ## Maintainers & Contributors
 
-Refer to [CONTRIBUTORS.md](./CONTRIBUTORS.md) for detailed information about project maintainers, contributors, and GSoC participants.
+Refer to [MAINTAINERS.md](./MAINTAINERS.md) for project maintainers and [CONTRIBUTORS.md](./CONTRIBUTORS.md) for contributors and GSoC participants.
