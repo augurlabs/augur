@@ -29,6 +29,8 @@ from augur.application.cli._csv_utils import (
     process_repo_group_csv,
 )
 
+from ._cli_util import get_db_version
+
 logger = logging.getLogger(__name__)
 
 
@@ -256,21 +258,6 @@ def add_github_org(ctx, organization_name):
         controller = RepoLoadController(session)
 
         controller.add_cli_org(organization_name)
-
-
-# get_db_version is a helper function to print_db_version and upgrade_db_version
-def get_db_version(engine):
-    db_version_sql = s.sql.text(
-        """
-        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
-        """
-    )
-
-    with engine.connect() as connection:
-        result = int(connection.execute(db_version_sql).fetchone()[2])
-
-    engine.dispose()
-    return result
 
 
 @cli.command("print-db-version")
