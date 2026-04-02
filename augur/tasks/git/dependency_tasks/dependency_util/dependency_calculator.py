@@ -10,6 +10,7 @@ from augur.tasks.git.dependency_tasks.dependency_util import c_deps
 from augur.tasks.git.dependency_tasks.dependency_util import go_deps
 from augur.tasks.git.dependency_tasks.dependency_util import kotlin_deps
 from augur.tasks.git.dependency_tasks.dependency_util import rust_deps
+from augur.tasks.git.dependency_tasks.dependency_util import r_deps
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator
 
 #Returns generator iterable to tuples of modules and their names
@@ -26,6 +27,7 @@ def get_dependency_analysis_module_tuples():
 	yield go_deps, 'go'
 	yield kotlin_deps, 'kotlin'
 	yield rust_deps, 'rust'
+	yield r_deps, 'R'
 
 class Dep:
 	def __init__(self, name, language, count):
