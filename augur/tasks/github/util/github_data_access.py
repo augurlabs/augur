@@ -44,6 +44,27 @@ class GithubDataAccess:
         self.key = None
         self.expired_keys_for_request = []
 
+    def endpoint_url(self, path: str, params: dict = None) -> str:
+        """Build a URL for a github endpoint using the specified path and query parameters
+
+        Args:
+            path (str): the path to use (i.e. "/users/MoralCode")
+            params (dict): optional query parameters to add to the url, as a dict
+
+        Returns:
+            str: the full URL to the specified resource.
+        """
+        # using pythons url processing library helps handle accidental
+        # inclusion of query parameters in the path string, ensuring all query
+        # parameters are properly encoded and escaped
+
+        if not path.startswith("/"):
+            path = "/" + path
+
+        url = "https://api.github.com" + path
+
+        return self.__add_query_params(url, params or {})
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
@@ -59,6 +80,20 @@ class GithubDataAccess:
         data = self.get_resource(url)
 
         return (100 * (num_pages -1)) + len(data)
+
+    def check_prs_enabled(self, owner: str, repo: str,) -> bool:
+        """
+        Checks whether pull requests are enabled for a repository.
+        Returns False if PRs are disabled (404 on /pulls) and true if there are PRs.
+        """
+        try:
+            url = self.endpoint_url(f"repos/{owner}/{repo}/pulls", {"per_page": "1"})
+            self.get_resource_page_count(url)
+            return True
+        except UrlNotFoundException:
+            self.logger.info(f"{owner}/{repo}: Pull requests are disabled. Skipping PR collection.")
+            return False
+
 
     def paginate_resource(self, url):
 
