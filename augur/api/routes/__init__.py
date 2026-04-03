@@ -7,6 +7,5 @@ from .config import *
 from .manager import *
 from .nonstandard_metrics import *
 from .user import *
-from .dei import *
 from .util import *
 from .complexity import *

@@ -219,19 +219,6 @@ t_working_commits = Table(
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
 
-class BadgingDEI(Base):
-    __tablename__ = 'dei_badging'
-    __table_args__ = {"schema": "augur_data"}
-    id = Column(Integer, primary_key=True, nullable=False)
-    badging_id = Column(Integer, nullable=False)
-    level = Column(String, nullable=False)
-
-    repo_id = Column(
-        ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
-    )
-
-    repo = relationship("Repo")
-
 
 class Config(Base):
     __tablename__ = 'config'
