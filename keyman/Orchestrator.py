@@ -12,7 +12,12 @@ if os.environ.get("KEYMAN_DOCKER"):
 
     sys.path.append("/augur")
 
-    conn = redis.Redis.from_url(os.environ.get("REDIS_CONN_STRING"))
+    # Only create a Redis connection if a connection string is provided.
+    redis_url = os.environ.get("REDIS_CONN_STRING")
+    if redis_url:
+        conn = redis.Redis.from_url(redis_url)
+    else:
+        conn = None
 
     # Just log to stdout if we're running in docker
     logger = logging.Logger("KeyOrchestrator")
@@ -151,7 +156,10 @@ class KeyOrchestrator:
             WaitKeyTimeout: If no fresh keys available (includes wait duration)
         """
         if platform not in self.fresh_keys:
-            raise InvalidRequest(f"Invalid platform: {platform}")
+            self.logger.warning(
+                f"Key requested for uninitialized platform '{platform}'; this may occur during startup after state cleanup."
+            )
+            return
 
         if not len(self.fresh_keys[platform]):
             if not len(self.expired_keys[platform]):
