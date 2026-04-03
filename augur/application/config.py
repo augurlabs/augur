@@ -91,9 +91,16 @@ default_config = {
                 "secondary_collection_interval_days": 10,
                 "facade_collection_interval_days": 10,
                 "ml_collection_interval_days": 40,
+                "non_repo_domain_tasks_interval_in_days": 30,
+                "retry_errored_repos_cron_hour": 0,
+                "retry_errored_repos_cron_minute": 0,
+                "process_contributors_interval_in_seconds": 3600,
+                "create_collection_status_records_interval_in_seconds": 86400,
                 "default_batch_size": 1000,
                 "github_event_batch_size": 500,
                 "github_message_batch_size": 20
+
+
             },
             "Message_Insights": {
                     "insight_days": 30,

@@ -149,6 +149,8 @@ constraint-dependencies = [
 [tool.pytest.ini_options]
 addopts = "-ra -s"
 testpaths = [
+    "test/tasks",
+    "tests/tasks/test_celery_scheduler.py",
     "tests/test_classes",
     "tests/test_application/test_cli/test_csv_utils.py",
     # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
