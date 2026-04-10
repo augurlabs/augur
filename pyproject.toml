@@ -151,6 +151,7 @@ addopts = "-ra -s"
 testpaths = [
     "tests/test_classes",
     "tests/test_application/test_cli/test_csv_utils.py",
+    "tests/test_util/test_inspect_without_import.py",
     # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
     # "tests/test_metrics",
     # "tests/test_tasks",
