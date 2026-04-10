@@ -79,6 +79,12 @@ but we are actively adding to it all the time.
 
 If you get stuck, please feel free to [ask for help](https://github.com/chaoss/augur/issues/new)!
 
+## Onboarding for New Contributors
+
+Newcomers can find a short onboarding guide with suggested steps and resources in `docs/onboarding.md`.
+It covers joining the community, running Augur locally, finding starter issues, and where to ask for help.
+
+
 ## Contributing
 
 To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
