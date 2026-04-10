@@ -79,6 +79,7 @@ services:
       - CACHE_DATADIR=/cache
       - CACHE_LOCKDIR=/cache
       - CELERYBEAT_SCHEDULE_DB=/tmp/celerybeat-schedule.db
+      - HOME=/tmp
     depends_on:
       - augur-db
       - redis
