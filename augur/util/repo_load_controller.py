@@ -49,6 +49,8 @@ class RepoLoadController:
         url = repo_data["url"]
         repo_group_id = repo_data["repo_group_id"]
 
+        repo_src_id = None
+
         # if it is from not from an org list then we need to check its validity, and get the repo type
         if not from_org_list:
             if "gitlab" in url:
@@ -57,19 +59,24 @@ class RepoLoadController:
                 result = Repo.is_valid_github_repo(self.session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
-            
+
             try:
                 repo_type = result[1]["repo_type"]
             except KeyError:
                 print("Skipping repo type...")
 
+            # Capture the source ID so we can deduplicate by it (issue #3056).
+            # Repos that were renamed keep the same numeric src ID even though
+            # their URL changes, so using src_id prevents double-ingestion.
+            repo_src_id = result[1].get("repo_src_id")
+
 
         # if the repo doesn't exist it adds it
         if "gitlab" in url:
-            repo_id = Repo.insert_gitlab_repo(self.session, url, repo_group_id, "CLI")
+            repo_id = Repo.insert_gitlab_repo(self.session, url, repo_group_id, "CLI", repo_src_id=repo_src_id)
             CollectionStatus.insert(self.session, logger, repo_id)
         else:
-            repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
+            repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type, repo_src_id=repo_src_id)
             CollectionStatus.insert(self.session, logger, repo_id)
 
         if not repo_id:

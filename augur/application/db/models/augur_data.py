@@ -966,7 +966,7 @@ class Repo(Base):
 
                 return False, {"status": f"Github Error: {data['message']}"}
 
-            return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
+            return True, {"status": "Valid repo", "repo_type": data["owner"]["type"], "repo_src_id": data["id"]}
         
         return False, {"status": "Failed to validate repo after multiple attempts"}
         
@@ -1156,6 +1156,15 @@ class Repo(Base):
         owner, repo = Repo.parse_github_repo_url(url)
         if not owner or not repo:
             return None
+
+        # If we know the numeric source ID, check whether this repo is already
+        # tracked under a different URL (e.g. after a GitHub rename/transfer).
+        # This prevents duplicate rows when the same repo is added twice with
+        # different URLs (issue #3056).
+        if repo_src_id is not None:
+            existing = session.query(Repo).filter(Repo.repo_src_id == repo_src_id).first()
+            if existing:
+                return existing.repo_id
 
         repo_data = {
             "repo_group_id": repo_group_id,
