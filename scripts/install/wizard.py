@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from secrets import token_hex
 from functools import wraps
 from pathlib import Path
+import os
 
 import threading, json, subprocess, re, importlib.util, sys
 
@@ -15,7 +16,10 @@ env = Environment()
 top = Path.cwd()
 template_dir = top / "augur/templates/"
 static_dir = top / "augur/static/"
-dbfile = top / "db.config.json"
+
+# Use CONFIG_DATADIR if set, otherwise default to project root for db.config.json
+config_dir = Path(os.getenv("CONFIG_DATADIR", str(top)))
+dbfile = config_dir / "db.config.json"
 
 config_script = top / "scripts/install/config.sh"
 

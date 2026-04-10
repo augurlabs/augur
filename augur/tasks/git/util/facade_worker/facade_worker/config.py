@@ -38,6 +38,7 @@ from psycopg2.errors import DeadlockDetected
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.lib import execute_sql
+from augur.application.config import ConfigPaths
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -45,11 +46,7 @@ logger = logging.getLogger(__name__)
 def get_database_args_from_env():
 
     db_str = os.getenv("AUGUR_DB")
-    try:
-        db_json_file_location = os.getcwd() + "/db.config.json"
-    except FileNotFoundError:
-        logger.error("\n\nPlease run augur commands in the root directory\n\n")
-        sys.exit()
+    db_json_file_location = ConfigPaths.db_config()
 
     db_json_exists = os.path.exists(db_json_file_location)
 
@@ -68,8 +65,7 @@ def get_database_args_from_env():
         credentials['db_host'] = parsedArgs.hostname#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
         credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     else:
-        with open("db.config.json", 'r') as f:
-            db_config = json.load(f)
+        db_config = ConfigPaths.read_db_config()
 
         credentials['db_user'] = db_config["user"]#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
         credentials['db_pass'] = db_config["password"]#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')

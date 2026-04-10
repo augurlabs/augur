@@ -21,6 +21,7 @@ from augur.application.cli import (
 )
 
 from augur.application.db.session import DatabaseSession
+from augur.application.config import ConfigPaths
 from sqlalchemy import update
 from datetime import datetime
 from augur.application.db.models import Repo
@@ -404,10 +405,9 @@ def check_pgpass():
             print("Database string is invalid and cannot be used")
 
     else:
-        with open("db.config.json", "r") as f:
-            config = json.load(f)
-            print(f"Config: {config}")
-            check_pgpass_credentials(config)
+        config = ConfigPaths.read_db_config()
+        print(f"Config from {ConfigPaths.db_config()}: {config}")
+        check_pgpass_credentials(config)
 
 
 @cli.command("init-database")
@@ -504,14 +504,13 @@ def run_psql_command_in_database(target_type, target):
         pass
         # TODO: Add functionality for environment variable
     else:
-        with open("db.config.json", "r") as f:
-            db_config = json.load(f)
+        db_config = ConfigPaths.read_db_config()
 
-            host = db_config["host"]
-            database_name = db_config["database_name"]
+        host = db_config["host"]
+        database_name = db_config["database_name"]
 
-            db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
-            engine = s.create_engine(db_conn_string)
+        db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
+        engine = s.create_engine(db_conn_string)
 
     check_call(
         [
