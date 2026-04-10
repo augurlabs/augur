@@ -28,7 +28,6 @@ from augur.application.db.session import DatabaseSession
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
 from augur.application.config import AugurConfig
 
@@ -83,7 +82,7 @@ def primary_repo_collect_phase(repo_git, full_collection):
     #Other tasks that don't need other tasks to run before they do just put in final group.
     repo_task_group = group(
         collect_repo_info.si(repo_git),
-        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs),
+        chain(primary_repo_jobs, secondary_repo_jobs),
         #facade_phase(logger,repo_git),
         collect_linux_badge_info.si(repo_git),
         collect_releases.si(repo_git),
@@ -213,10 +212,6 @@ def build_facade_repo_collect_request(session, logger, enabled_phase_names, days
 
     facade_enabled_phases.append(facade_task_success_util_gen)
 
-    def facade_task_update_weight_util_gen(repo_git, full_collection):
-        return git_update_commit_count_weight.si(repo_git)
-
-    facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
     request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=days_until_collect_again)
 
@@ -283,52 +278,6 @@ def augur_collection_monitor(self):
         main_routine.start_data_collection()
 
 # have a pipe of 180
-
-
-@celery.task(bind=True)
-def augur_collection_update_weights(self):
-
-    engine = self.app.engine
-
-    logger = logging.getLogger(augur_collection_update_weights.__name__)
-
-    logger.info("Updating stale collection weights")
-
-    with get_session() as session:
-
-        core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
-
-        for status in core_weight_update_repos:
-            repo = Repo.get_by_id(session, status.repo_id)
-
-            repo_git = repo.repo_git
-            status = repo.collection_status[0]
-            raw_count = status.issue_pr_sum
-
-            issue_pr_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
-    
-        facade_not_pending = CollectionStatus.facade_status != CollectionState.PENDING.value
-        facade_not_failed = CollectionStatus.facade_status != CollectionState.FAILED_CLONE.value
-        facade_weight_not_null = CollectionStatus.facade_weight != None
-
-        facade_weight_update_repos = session.query(CollectionStatus).filter(and_(facade_not_pending,facade_not_failed,facade_weight_not_null)).all()
-
-        for status in facade_weight_update_repos:
-            repo = Repo.get_by_id(session, status.repo_id)
-
-            commit_count = status.commit_sum
-            date_factor = get_facade_weight_time_factor(repo.repo_git)
-            weight = commit_count - date_factor
-
-            update_query = (
-                update(CollectionStatus)
-                .where(CollectionStatus.repo_id == status.repo_id)
-                .values(facade_weight=weight)
-            )
-
-            session.execute(update_query)
-            session.commit()
-            #git_update_commit_count_weight(repo_git)
 
 @celery.task(bind=True)
 def retry_errored_repos(self):

@@ -18,6 +18,7 @@ Augur Documentation
    schema/toc
    login
    procedures/toc
+   history/index
 .. 
 
 ..
