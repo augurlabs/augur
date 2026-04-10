@@ -76,7 +76,11 @@ default_config = {
                 "core_worker_count": 5,
                 "secondary_worker_count": 5,
                 "facade_worker_count": 5,
-                "refresh_materialized_views_interval_in_days": 1
+                "refresh_materialized_views_interval_in_days": 1,
+                "non_repo_domain_tasks_interval_in_days": 30,
+                "retry_errored_repos_interval_in_days": 1,
+                "process_contributors_interval_in_seconds": 3600,
+                "create_collection_status_records_interval_in_days": 1
             },
             "Redis": {
                 "cache_group": 0, 
