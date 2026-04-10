@@ -1,10 +1,12 @@
 import logging
 from datetime import timedelta, timezone
 
+from celery.exceptions import Ignore
+
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException, ResourceGoneException
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
@@ -25,7 +27,7 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
-            
+
         repo_id = augur_db.session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id
 
@@ -35,21 +37,25 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
         if full_collection:
             core_data_last_collected = None
         else:
-            # subtract 2 days to ensure all data is collected 
+            # subtract 2 days to ensure all data is collected
             core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
-        
-        if is_repo_small(repo_id):
-            message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
-            
-            if message_data:
-                process_messages(message_data, task_name, repo_id, logger, augur_db)
+        try:
+            if is_repo_small(repo_id):
+                message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
+
+                if message_data:
+                    process_messages(message_data, task_name, repo_id, logger, augur_db)
+
+                else:
+                    logger.info(f"{owner}/{repo} has no messages")
 
             else:
-                logger.info(f"{owner}/{repo} has no messages")
+                process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected)
 
-        else:
-            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected)
+        except ResourceGoneException as e:
+            logger.warning(f"Issues are disabled for repo {repo_git}, skipping message collection: {e}")
+            raise Ignore()
 
 
 def is_repo_small(repo_id):
