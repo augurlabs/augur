@@ -8,7 +8,7 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
-
+from typing_extensions import deprecated
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -27,7 +27,7 @@ def clean_dict(d):
     return {k: ("" if v is None else v) for k, v in d.items()}
 
 
-# deprecated in favor of GithubDataAcess.get_resource()
+@deprecated("Please use GithubDataAcess.get_resource() instead")
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
     """Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
     

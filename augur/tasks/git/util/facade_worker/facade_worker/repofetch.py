@@ -36,6 +36,7 @@ from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 from augur.application.db.lib import execute_sql, get_repo_by_repo_git
+from typing_extensions import deprecated
 
 class GitCloneError(Exception):
     pass
@@ -174,8 +175,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
     facade_helper.log_activity('Info', f"Fetching new repos (complete)")
 
 
-# Deprecated functionality. No longer used
-# Should be re-purposed in start_tasks when tasks are being scheduled
+@deprecated("Deprecated functionality. No longer used. Should be re-purposed in start_tasks when tasks are being scheduled")
 def check_for_repo_updates(session, repo_git):
 
     # Check the last time a repo was updated and if it has been longer than the
@@ -244,7 +244,7 @@ def check_for_repo_updates(session, repo_git):
 
 # Deprecated. No longer used.
 
-
+@deprecated("This functionality is deprecated and won't work with present facade versions")
 def force_repo_updates(session, repo_git):
     raise NotImplementedError(
         "This functionality is deprecated and won't work with present facade versions")
@@ -263,7 +263,7 @@ def force_repo_updates(session, repo_git):
 
 # Deprecated. No longer used.
 
-
+@deprecated("This functionality is deprecated and won't work with present facade versions")
 def force_repo_analysis(session, repo_git):
     raise NotImplementedError(
         "This functionality is deprecated and won't work with present facade versions")
