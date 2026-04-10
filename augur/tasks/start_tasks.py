@@ -10,6 +10,7 @@ import sqlalchemy as s
 from augur.tasks.github import *
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     from augur.tasks.data_analysis import *
+from augur.tasks.contributors_engagement.worker import collect_contributor_engagement
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
@@ -123,7 +124,8 @@ def secondary_repo_collect_phase(repo_git, full_collection):
         process_pull_request_files.si(repo_git, full_collection),
         process_pull_request_commits.si(repo_git, full_collection),
         chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git, full_collection)),
-        process_ossf_dependency_metrics.si(repo_git)
+        process_ossf_dependency_metrics.si(repo_git),
+        collect_contributor_engagement.si(repo_git, full_collection)
     )
 
     return repo_task_group

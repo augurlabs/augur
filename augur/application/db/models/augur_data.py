@@ -3701,6 +3701,52 @@ class RepoClone(Base):
 
     repo = relationship("Repo")
 
+class ContributorEngagement(Base):
+    __tablename__ = "contributor_engagement"
+    __table_args__ = {"schema": "augur_data"}
+
+    engagement_id = Column(
+        BigInteger,
+        primary_key=True,
+        server_default=text(
+            "nextval('augur_data.contributor_engagement_engagement_id_seq'::regclass)"
+        ),
+    )
+    repo_id = Column(ForeignKey("augur_data.repo.repo_id"), nullable=False)
+    cntrb_id = Column(ForeignKey("augur_data.contributors.cntrb_id"), nullable=False)
+    username = Column(String, nullable=False)
+    full_name = Column(String)
+    country = Column(String)
+    platform = Column(String)
+
+    # D0 Level - Basic Engagement
+    d0_forked = Column(Boolean, server_default=text("false"))
+    d0_starred_or_watched = Column(Boolean, server_default=text("false"))
+    d0_engagement_timestamp = Column(TIMESTAMP(precision=6))
+
+    # D1 Level - Issue/Review Engagement
+    d1_first_issue_created_at = Column(TIMESTAMP(precision=6))
+    d1_first_pr_opened_at = Column(TIMESTAMP(precision=6))
+    d1_first_pr_commented_at = Column(TIMESTAMP(precision=6))
+
+    # D2 Level - Significant Contributions
+    d2_has_merged_pr = Column(Boolean, server_default=text("false"))
+    d2_created_many_issues = Column(Boolean, server_default=text("false"))
+    d2_total_comments = Column(BigInteger, server_default=text("0"))
+    d2_has_pr_with_many_commits = Column(Boolean, server_default=text("false"))
+    d2_commented_on_multiple_prs = Column(Boolean, server_default=text("false"))
+
+    # Metadata
+    tool_source = Column(String)
+    tool_version = Column(String)
+    data_source = Column(String)
+    data_collection_date = Column(
+        TIMESTAMP(precision=6), server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    repo = relationship("Repo")
+    contributor = relationship("Contributor")
+
 
 class TopicModelMeta(Base):
     __tablename__ = "topic_model_meta"
