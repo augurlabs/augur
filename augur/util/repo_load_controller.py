@@ -277,7 +277,7 @@ class RepoLoadController:
                 return None, {"status": "Invalid order by"}
             
             # Find the column named in the 'order_by', and get its asc() or desc() method 
-            directive: function = getattr(get_colum_by_label(order_by), direction.lower())
+            directive = getattr(get_colum_by_label(order_by), direction.lower())
             
             repos = repos.order_by(directive())
 
