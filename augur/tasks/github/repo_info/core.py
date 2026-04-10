@@ -36,6 +36,90 @@ def query_committers_count(key_auth, logger, owner, repo):
         data=0
     
     return data 
+
+def get_community_health_files(key_auth, logger, owner, repo):
+    """get URLs for community health files like CONTRIBUTING.md from repository"""
+    logger.info('Querying community health files\n')
+    url = f'https://api.github.com/repos/{owner}/{repo}/community/profile'
+    
+    try:
+        github_data_access = GithubDataAccess(key_auth, logger)
+        data = github_data_access.get_resource(url)
+        
+        health_files = {
+            'contributing_file': None,
+            'security_issue_file': None,
+            'changelog_file': None
+        }
+        
+        if data and 'files' in data:
+            files = data['files']
+            
+            if 'contributing' in files and files['contributing']:
+                health_files['contributing_file'] = files['contributing'].get('html_url')
+            
+        return health_files
+        
+    except Exception as e:
+        logger.warning(f"Could not fetch community health files: {e}")
+        return {
+            'contributing_file': None,
+            'security_issue_file': None,
+            'changelog_file': None
+        }
+
+def check_for_security_and_changelog(key_auth, logger, owner, repo):
+    """look for SECURITY.md and CHANGELOG files in common repository locations"""
+    logger.info('Checking for SECURITY and CHANGELOG files\n')
+    
+    result = {
+        'security_issue_file': None,
+        'changelog_file': None
+    }
+    
+    security_paths = ['SECURITY.md', '.github/SECURITY.md', 'docs/SECURITY.md']
+    changelog_paths = ['CHANGELOG.md', 'CHANGELOG', 'CHANGELOG.txt', 'HISTORY.md', 'RELEASES.md']
+    
+    github_data_access = GithubDataAccess(key_auth, logger)
+    
+
+    for path in security_paths:
+        try:
+            url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
+            response = github_data_access.get_resource(url)
+            if response and 'html_url' in response:
+                result['security_issue_file'] = response['html_url']
+                logger.info(f"Found SECURITY file at {path}")
+                break
+        except:
+            continue
+    
+
+    for path in changelog_paths:
+        try:
+            url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
+            response = github_data_access.get_resource(url)
+            if response and 'html_url' in response:
+                result['changelog_file'] = response['html_url']
+                logger.info(f"Found CHANGELOG file at {path}")
+                break
+        except:
+            continue
+    
+    return result
+
+def get_repo_topics(repo_data):
+    """pull out repository topics and join them into comma-separated string"""
+    try:
+        if repo_data and 'topics' in repo_data:
+            topics = repo_data['topics']
+            if topics and isinstance(topics, list):
+                return ','.join(topics)
+        
+        return None
+        
+    except Exception:
+        return None
 """
 def get_repo_data(logger, url, response):
     data = {}
@@ -187,19 +271,25 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
 
     data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
-    # Get committers count info that requires seperate endpoint  
     committers_count = query_committers_count(key_auth, logger, owner, repo)
+    
+    repo_data = get_repo_data(logger, owner, repo)
+    
+    health_files = get_community_health_files(key_auth, logger, owner, repo)
+    
+    security_changelog = check_for_security_and_changelog(key_auth, logger, owner, repo)
+    
+    topics = get_repo_topics(repo_data)
 
-    # Put all data together in format of the table
     logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
     rep_inf = {
         'repo_id': repo_orm_obj.repo_id,
         'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
         'issues_enabled': data['hasIssuesEnabled'] if 'hasIssuesEnabled' in data else None,
         'open_issues': data['issues']['totalCount'] if data['issues'] else None,
-        'pull_requests_enabled': None,
+        'pull_requests_enabled': 'true' if repo_data.get('has_projects') else 'false',
         'wiki_enabled': data['hasWikiEnabled'] if 'hasWikiEnabled' in data else None,
-        'pages_enabled': None,
+        'pages_enabled': 'true' if repo_data.get('has_pages') else 'false',
         'fork_count': data['forkCount'] if 'forkCount' in data else None,
         'default_branch': data['defaultBranchRef']['name'] if data['defaultBranchRef'] else None,
         'watchers_count': data['watchers']['totalCount'] if data['watchers'] else None,
@@ -207,14 +297,14 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
         'stars_count': data['stargazers']['totalCount'] if data['stargazers'] else None,
         'committers_count': committers_count,
         'issue_contributors_count': None,
-        'changelog_file': None,
-        'contributing_file': None,
+        'changelog_file': security_changelog.get('changelog_file'),
+        'contributing_file': health_files.get('contributing_file'),
         'license_file': data['licenseInfo']['url'] if data['licenseInfo'] else None,
         'code_of_conduct_file': data['codeOfConduct']['url'] if data['codeOfConduct'] else None,
-        'security_issue_file': None,
+        'security_issue_file': security_changelog.get('security_issue_file'),
         'security_audit_file': None,
         'status': None,
-        'keywords': None,
+        'keywords': topics,
         'commit_count': data['defaultBranchRef']['target']['history']['totalCount'] if data['defaultBranchRef'] else None,
         'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
         'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
@@ -244,8 +334,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
 
     execute_sql(insert_statement)
 
-    # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
-    repo_data = get_repo_data(logger, owner, repo)
+
 
     forked = is_forked(logger, repo_data)
     archived = is_archived(logger, repo_data)
