@@ -135,8 +135,8 @@ docs-view: docs
 # Docker Shortcuts
 # Do not use these unless you know what they mean.
 .PHONY: compose-run compose-run-database
-.PHONY: build-backend run-backend build-frontend run-frontend build-database run-database
-
+.PHONY: docker-build docker-build-backend docker-build-database docker-build-rabbitmq docker-build-keyman
+.PHONY: docker-run-backend docker-run-database docker-run-rabbitmq docker-run-keyman
 
 compose-run:
 	@ docker compose -f docker-compose.yml up --build
@@ -148,29 +148,23 @@ compose-run-database:
 	@ echo
 	@ docker compose -f docker-compose.yml -f database-compose.yml up --build
 
-docker-build: docker-build-backend docker-build-frontend docker-build-database docker-build-rabbitmq
-
+docker-build: docker-build-backend docker-build-database docker-build-rabbitmq docker-build-keyman
 docker-build-backend:
-	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
-
-docker-build-frontend:
-	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
+	@ docker build -t augurlabs/augur:backend -f docker/backend/Dockerfile .
 
 docker-build-database:
-	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
+	@ docker build -t augurlabs/augur:database -f docker/database/Dockerfile .
 
 docker-build-rabbitmq:
-	@ docker build -t augurlabs/augur:rabbitmq -f util/docker/rabbitmq/Dockerfile .
+	@ docker build -t augurlabs/augur:rabbitmq -f docker/rabbitmq/Dockerfile .
+
+docker-build-keyman:
+	@ docker build -t augurlabs/augur:keyman -f docker/keyman/Dockerfile .
 
 docker-run-backend:
 	@ - docker stop augur_backend
 	@ - docker rm augur_backend
 	docker run -p 5000:5000 --name augur_backend --env-file docker_env.txt augurlabs/augur:backend
-
-docker-run-frontend:
-	@ - docker stop augur_frontend
-	@ - docker rm augur_frontend
-	docker run -p 8080:8080 --name augur_frontend augurlabs/augur:frontend
 
 docker-run-database:
 	@ - docker stop augur_database
@@ -180,4 +174,9 @@ docker-run-database:
 docker-run-rabbitmq:
 	@ - docker stop augur_rabbitmq
 	@ - docker rm augur_rabbitmq
-	docker run -p 5434:5432 --name augur_rabbitmq augurlabs/augur:rabbitmq
+	docker run -p 5672:5672 --name augur_rabbitmq augurlabs/augur:rabbitmq
+
+docker-run-keyman:
+	@ - docker stop augur_keyman
+	@ - docker rm augur_keyman
+	docker run --name augur_keyman --env-file docker_env.txt augurlabs/augur:keyman
