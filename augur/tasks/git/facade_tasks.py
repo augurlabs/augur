@@ -2,7 +2,7 @@
 
 import logging
 import datetime
-from celery import group, chain
+from celery import chain
 
 from subprocess import check_output
 from augur.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts, get_missing_commit_message_hashes
@@ -499,12 +499,13 @@ def facade_phase(repo_git, full_collection):
 
 
     #These tasks need repos to be cloned by facade before they can work.
-    facade_sequence = group(
-        chain(*facade_core_collection),
+    facade_core_collection.extend([
         process_dependency_metrics.si(repo_git),
         process_libyear_dependency_metrics.si(repo_git),
         process_scc_value_metrics.si(repo_git)
-    )
+    ])
+
+    facade_sequence = chain(*facade_core_collection)
 
     logger.info(f"Facade sequence: {facade_sequence}")
     return facade_sequence
