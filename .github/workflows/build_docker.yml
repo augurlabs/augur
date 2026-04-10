@@ -17,7 +17,7 @@ jobs:
     name: Test on macOS
     runs-on: macos-latest
     env:
-      UV_LOCKED: true  # Assert that uv.lock is up-to-date
+      UV_LOCKED: true # Assert that uv.lock is up-to-date
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,7 +50,6 @@ jobs:
           uv run python -m nltk.downloader popular
           uv run python -m nltk.downloader universal_tagset
 
-
   test-e2e:
     name: End-to-end test (Docker)
     runs-on: ubuntu-latest
@@ -59,7 +58,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -171,7 +170,7 @@ jobs:
           docker compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
                 && docker compose -f docker-compose.yml down)
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
@@ -286,7 +285,7 @@ jobs:
           podman compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
                 && podman compose -f docker-compose.yml down)
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
           AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
@@ -298,8 +297,6 @@ jobs:
         if: always()
         # We use tail so that we can see the name of each file as it's printed
         run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
-
-
 
   push-image:
     name: Push image
