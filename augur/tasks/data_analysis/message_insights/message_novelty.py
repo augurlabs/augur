@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from keras.layers import Dense, Input
-from keras.models import Model, load_model
+#from keras.layers import Dense, Input
+#from keras.models import Model, load_model
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
 
@@ -42,9 +42,12 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
 # '''
 
 def autoencoder(vec_input, train):
+    from keras.layers import Dense, Input
     input_dim = Input(shape = (vec_input, ))
     encoded1 = Dense(vec_input//2, activation='sigmoid')(input_dim)
     encoded2 = Dense(1, activation='sigmoid')(encoded1)
+
+    from keras.models import Model
 
     # Decoder Layers
     decoded1 = Dense(vec_input//2, activation='tanh')(encoded2)
@@ -170,6 +173,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
 
     # Pretrained AE model already exists, directly predict
     else:
+        from keras.models import load_model
         threshold = 0
         ae = load_model(f'{models_dir}/{r_id}_uniq.h5')
         #logger.info('Loaded pretrained AE model for repo')
