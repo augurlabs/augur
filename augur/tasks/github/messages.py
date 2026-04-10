@@ -64,8 +64,10 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
     owner, repo = get_owner_repo(repo_git)
 
+    github_data_access = GithubDataAccess(key_auth, logger)
+
     # url to get issue and pull request comments
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
+    url = github_data_access.issues_endpoint_url(owner, repo) + "comments"
 
     if since:
         url += f"?since={since.isoformat()}"
@@ -73,8 +75,6 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
-    github_data_access = GithubDataAccess(key_auth, logger)
-
     message_count = github_data_access.get_resource_count(url)
 
     logger.info(f"{task_name}: Collecting {message_count} github messages")
