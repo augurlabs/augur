@@ -560,7 +560,10 @@ def update_issue_closed_cntrbs_by_repo_id(repo_id):
         )
 
     if update_data:
-        with engine.connect() as connection:
+        # engine.begin() auto-commits (or rolls back on exception).
+        # engine.connect() does NOT auto-commit, so the UPDATE was previously
+        # silently rolled back on every call (issue #3457).
+        with engine.begin() as connection:
             update_stmt = s.text("""
                 UPDATE issues
                 SET cntrb_id = :cntrb_id

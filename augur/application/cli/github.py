@@ -26,7 +26,7 @@ def update_api_key():
     Get the ratelimit of Github API keys
     """
 
-    with DatabaseEngine() as engine, engine.connect() as connection:
+    with DatabaseEngine() as engine, engine.begin() as connection:
 
         get_api_keys_sql = s.sql.text(
             """
