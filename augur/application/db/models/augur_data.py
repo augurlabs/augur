@@ -1742,7 +1742,6 @@ class PullRequest(Base):
     __tablename__ = "pull_requests"
     __table_args__ = (
         UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
-        UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
         UniqueConstraint("pr_url", name="pull-request-insert-unique"),
         Index("id_node", text("pr_src_id DESC"), text("pr_src_node_id DESC NULLS LAST")),
         Index(
