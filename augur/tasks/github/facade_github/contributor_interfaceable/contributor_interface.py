@@ -8,7 +8,7 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
-
+from typing_extensions import deprecated
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -107,7 +107,7 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
 
     return response_data
 
-
+@deprecated("Please use GithubDataAcess.endpoint_url() instead")
 def create_endpoint_from_email(email):
     # Note: I added "+type:user" to avoid having user owned organizations be returned
     # Also stopped splitting per note above.
@@ -117,7 +117,7 @@ def create_endpoint_from_email(email):
 
     return url
 
-
+@deprecated("Please use GithubDataAcess.endpoint_url() instead")
 def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
     logger.debug(
         f"Trying to create endpoint from commit hash: {commit_sha}")
