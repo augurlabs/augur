@@ -8,7 +8,6 @@ import traceback
 import inspect
 import celery
 from celery import Celery
-from celery import current_app 
 from celery.signals import after_setup_logger
 
 
@@ -81,12 +80,12 @@ class AugurCoreRepoCollectionTask(celery.Task):
         # Note: I think self.app.engine would work but leaving it to try later
         engine = get_engine()
 
-        logger = AugurLogger(logger_name).get_logger()
+        task_logger = AugurLogger(logger_name).get_logger()
 
-        logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
+        task_logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
 
         with get_session() as session:
-            logger.info(f"Repo git: {repo_git}")
+            task_logger.info(f"Repo git: {repo_git}")
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
             repoStatus = repo.collection_status[0]
@@ -263,7 +262,7 @@ def setup_periodic_tasks(sender, **kwargs):
 def setup_loggers(*args,**kwargs):
     """Override Celery loggers with our own."""
 
-    all_celery_tasks = list(current_app.tasks.keys())
+    all_celery_tasks = list(celery_app.tasks.keys())
 
     augur_tasks = [task for task in all_celery_tasks if 'celery.' not in task]
     
