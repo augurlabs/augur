@@ -6,13 +6,15 @@ import os
 import re
 import beaker
 
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, abort
 
 from augur.application.db import get_session
 from functools import wraps
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
 from augur.application.db.models import ClientApplication
+
+from flask_login import login_required, current_user
 
 development = get_development_flag()
 
@@ -112,7 +114,6 @@ def get_client_token():
     
     return token
 
-
 # usage:
 """
 @app.route("/path")
@@ -156,3 +157,21 @@ def ssl_required(fun):
         return fun(*args, **kwargs)
     
     return wrapper
+
+def admin_required(func):
+    @login_required
+    @wraps(func)
+    def inner_function(*args, **kwargs):
+        if current_user.admin:
+            return func(*args, **kwargs)
+        else:
+            abort(403)
+    return inner_function
+
+def development_required(func):
+    @wraps(func)
+    def inner_function(*args, **kwargs):
+        if not development:
+            abort(403)
+        return func(*args, **kwargs)
+    return inner_function

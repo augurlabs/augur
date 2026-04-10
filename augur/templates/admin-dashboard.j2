@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -16,139 +17,187 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <link href="{{ url_for('static', filename= 'css/dashboard.css') }}" rel="stylesheet">
 
     <title>Dasboard - Augur View</title>
 </head>
 
-<body style="min-height: 100%;" class="dashboard-body">
+<body>
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <div class="container-fluid h-100 d-flex flex-column fixed-top" style="height: 100%;">
-        <div class="row flex-fill" style="height: inherit;">
-            <div class="d-flex flex-column p-3 text-white dashboard-sidebar mh-100">
-                <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                    <span class="fs-4">Dashboard</span>
-                </div>
-                <hr>
-                <ul class="nav nav-pills flex-column mb-auto" id="nav-list">
-                    <li class="nav-item">
-                        <a href="#stats-section" class="nav-link active" aria-current="page">Stats</a>
-                    </li>
-                    <li>
-                        <a href="#accounts-section" class="nav-link text-white">Accounts</a>
-                    </li>
-                    <li>
-                        <a href="#config-section" class="nav-link text-white">Configuration</a>
-                    </li>
-                </ul>
-                <hr>
-                <div class="dropdown">
-                    <a href="{{ url_for('root') }}" class="d-flex align-items-center text-white text-decoration-none">
-                        <img src="{{ url_for('logo') }}" alt="Augur logo" height="32" class="rounded-circle me-2">
-                    </a>
-                    {# Reserved for future use
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                        <li><a class="dropdown-item" href="#">New project...</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
+    {% include 'notifications.j2' %}
+    <div class="container-fluid overflow-hidden">
+        <div class="row vh-100 overflow-none">
+            <div class="col-12 col-md-3 col-xxl-2 d-flex sticky-top dashboard-sidebar">
+                <div class="d-flex flex-md-column text-truncate flex-row flex-grow-1 align-items-center align-items-md-start px-3 py-2 text-white">
+                    <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Dashboard</span>
+                    </div>
+                    <ul class="nav nav-pills flex-md-column flex-row flex-nowrap flex-shrink-1 flex-md-grow-0 flex-grow-1 mb-md-auto mb-0 justify-content-center align-items-center align-items-md-start"
+                        id="menu">
                         <li>
-                            <hr class="dropdown-divider">
+                            <a id="stats-link" href="#stats" class="nav-link active px-sm-0 px-2">
+                                <i class="fs-5 bi-graph-up"></i><span
+                                    class="ms-2 d-none d-md-inline">Status</span></a>
                         </li>
-                        <li><a class="dropdown-item" href="#">Sign out</a></li>
+                        <li>
+                            <a id="user-link" href="#user" class="nav-link px-sm-0 px-2">
+                                <i class="fs-5 bi-people"></i><span class="ms-2 d-none d-md-inline">Users</span></a>
+                        </li>
+                        <li>
+                            <a id="config-link" href="#config" class="nav-link px-sm-0 px-2">
+                                <i class="fs-5 bi-sliders"></i><span class="ms-2 d-none d-md-inline">Configuration</span>
+                            </a>
+                        </li>
                     </ul>
-                    #}
+                    <a href="{{ url_for('root') }}"
+                        class="d-flex align-items-around mw-100 text-white text-decoration-none">
+                        <img src="{{ url_for('logo') }}" alt="Augur logo" height="40" class="rounded-circle me-2">
+                    </a>
                 </div>
             </div>
-            {# Start dashboard content #}
-            <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3 content-column mh-100">
-                <h1 id="stats-section">Stats</h1>
-                {# Start content card #}
-                <div class="card dashboard-content">
-                    <div class="card-body">
-                        {# Start form body #}
-                        <form id="stats-form">
-                            {% for section in sections %}
-                            <div class="row mb-3">
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                    <h6 class="mb-3 text-primary">{{ section.title }}</h6>
-                                </div>
-                                {% for setting in section.settings %}
-                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
-                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
-                                        <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
+            <div class="col d-flex flex-column h-100 pb-5 overflow-scroll">
+                {# Start dashboard content #}
+                <div class="col mb-3 content-column">
+                    <div id="stats-div">
+                        <h1 id="stats-section">Stats</h1>
+                        {# Start content card #}
+                        <div class="card dashboard-content">
+                            <div class="card-body">
+                                <div class="row justify-content-end">
+                                    <h1>TODO</h1>
+                                    {# <div class="column">
+                                        <button type="button" name="restart" class="btn btn-primary" onclick="restart_confirm()">Restart Augur</button>
                                     </div>
+                                    <div class="column">
+                                        <button type="button" name="shutdown" class="btn btn-primary" onclick="shutdown_confirm()">Shutdown Augur</button>
+                                    </div> #}
                                 </div>
-                                {% endfor %}
+                                <!--
+                                <form id="stats-form">
+                                    {% for section in sections %}
+                                    <div class="row mb-3">
+                                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                            <h6 class="mb-3 text-primary">{{ section.title }}</h6>
+                                        </div>
+                                        {% for setting in section.settings %}
+                                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                            <div class="form-group">
+                                                <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                                <input type="text" class="form-control input-textbox" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                                <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                    {# <div class="row">
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                                        </div>
+                                    </div> #}
+                                </form>
+                                -->
                             </div>
-                            {% endfor %}
-                            {# <div class="row">
-                                <div class="d-flex justify-content-end">
-                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                        </div>
+                    </div>
+                    <div id="user-div" hidden>
+                        <h1 id="stats-section">User List</h1>
+                        {% if users %}
+                        {%- set tableHeaders =
+                        [{"title": "ID"},
+                        {"title" : "Login Name"},
+                        {"title" : "First Name"},
+                        {"title" : "Last Name"},
+                        {"title" : "Email"},
+                        {"title" : "Admin"}]
+                        -%}
+                        <div class="display-table table-responsive rounded w3-animate-opacity">
+                            <table class="table table-striped table-bordered">
+                                <!-- Table header start -->
+                                <thead>
+                                    <tr>
+                                        {%- for header in tableHeaders -%}
+                                        <th scope="col">{{ header.title }}</th>
+                                        {%- endfor -%}
+                                    </tr>
+                                </thead>
+                                <!-- Table rows start -->
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <th scope="row">{{ user.user_id }}</th>
+                                        <td>{{ user.login_name }}</td>
+                                        <td>{{ user.first_name }}</td>
+                                        <td>{{ user.last_name }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{% if user.admin %} <i class="bi bi-check-lg"></i> {% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        {# Theoretically, unreachable #}
+                        <p>What!?</p>
+                        {% endif %}
+                    </div>
+                    <div id="config-div" hidden>
+                        <h1 id="stats-section">Config</h1>
+                        <p>Listed below is the full Augur configuration schema. Click on a section to expand it, and double-click on a text box to autofill it with the existing value.</p>
+                        <p>Changes are saved automatically, although some require a restart of Augur to take effect.</p>
+                        <div class="card dashboard-content">
+                            <div class="card-body contrast-card">
+                                <div class="accordion">
+                                    {% for section in config.items() %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="{{ section[0] }}-panel-heading">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ section[0]|escape_ID }}-panel" aria-expanded="false" aria-controls="{{ section[0] }}-panel">
+                                                {{ section[0] }}
+                                            </button>
+                                        </h2>
+                                        <div id="{{ section[0] }}-panel" class="accordion-collapse collapse" aria-labelledby="{{ section[0] }}-panel-heading">
+                                            <div class="accordion-body">
+                                                {% for setting in section[1].items() %}
+                                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                                    <div class="form-group">
+                                                        <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text" id="basic-addon1"><i class="bi bi-check"></i></span>
+                                                            </div>
+                                                            <input type="text" section="{{ section[0] }}" setting="{{ setting[0] }}" class="form-control input-textbox" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
+                                                        </div>
+                                                        <div class="form-text mb-1">No description available</div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                            </div> #}
-                        </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <h1 id="accounts-section">User Accounts</h1>
-                {# Start content card #}
-                <div class="card dashboard-content">
-                    <div class="card-body">
-                        <form id="accounts-form">
-                            {% for section in sections %}
-                            <div class="row mb-3">
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                    <h6 class="mb-3 text-primary">{{ section.title }}</h6>
-                                </div>
-                                {% for setting in section.settings %}
-                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
-                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
-                                        <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endfor %}
-                            {# <div class="row">
-                                <div class="d-flex justify-content-end">
-                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
-                                </div>
-                            </div> #}
-                        </form>
-                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="confirmation-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Are You Sure?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <h1 id="config-section">Configuration</h1>
-                {# Start content card #}
-                <div class="card dashboard-content">
-                    <div class="card-body">
-                        <form id="settings-form">
-                            {% for section in config.items() %}
-                            <div class="row mb-3">
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                    <h6 class="mb-3 text-primary">{{ section[0] }}</h6>
-                                </div>
-                                {% for setting in section[1].items() %}
-                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
-                                        <input type="text" class="form-control" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
-                                        <div class="form-text mb-1">No description available</div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endfor %}
-                            <div class="row">
-                                <div class="d-flex justify-content-end">
-                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Update Settings</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                <div class="modal-body">
+                    <p id="modal-text"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmation-button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>
@@ -156,23 +205,196 @@
 </body>
 <script src="{{ url_for('static', filename='js/range.js') }}" charset="utf-8"></script>
 <script type="text/javascript">
-var elements = document.getElementsByClassName("nav-link");
-range(elements.length).forEach((i) => {
-    elements[i].addEventListener("click", function() {
-        setActive(elements[i]);
-    })
-});
-
-function setActive(navLink) {
     var elements = document.getElementsByClassName("nav-link");
     range(elements.length).forEach((i) => {
-        if(elements[i].classList.contains("active")) {
-            elements[i].classList.add("text-white");
-            elements[i].classList.remove("active");
+        elements[i].addEventListener("click", function () {
+            setActive(elements[i]);
+        })
+    });
+
+    function getDivFromNavLink(navLink) {
+        var href = navLink.getAttribute("href");
+        var div_id = href.replace("#", "");
+        return document.getElementById(div_id + "-div");
+    }
+
+    function setActive(navLink) {
+        if(!navLink) {
+            return;
+        }
+        
+        var elements = document.getElementsByClassName("nav-link");
+        range(elements.length).forEach((i) => {
+            if (elements[i].classList.contains("active")) {
+                elements[i].classList.remove("active");
+
+                div = getDivFromNavLink(elements[i]);
+                div.hidden = true;
+            }
+        });
+        navLink.classList.add("active");
+
+        div = getDivFromNavLink(navLink);
+        div.hidden = false;
+    }
+</script>
+<script type="text/javascript">
+function restart_confirm() {
+    var text = document.getElementById("modal-text");
+    text.innerHTML = "Restarting Augur can take several minutes, and will interrupt collection. Do you want to continue?";
+    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
+    var confirmButton = document.getElementById("confirmation-button");
+    confirmButton.onclick = () => {
+        fetch({{ url_for('restart_system') | quoted }}).then(response => {
+            if(response.ok) {
+                window.location.replace("{{ url_for('server_ping_frontend') }}");
+            } else {
+                flashToast("An error occurred: HTTP " + response.status)
+            }
+        });
+    }
+    confirmModal.show();
+}
+function shutdown_confirm() {
+    var text = document.getElementById("modal-text");
+    text.innerHTML = "Once shut down, Augur can only be started again from the CLI. Do you want to continue?";
+    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
+    var confirmButton = document.getElementById("confirmation-button");
+    confirmButton.onclick = () => {
+        fetch({{ url_for('shutdown_system') | quoted }}).then(response => {
+            if(response.ok) {
+                flashToast("Shutdown request acknowledged");
+            } else {
+                flashToast("An error occurred: HTTP " + response.status)
+            }
+        });
+    }
+    confirmModal.show();
+}
+</script>
+<script type="text/javascript">
+{# document.getElementById("settings-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    var data = {};
+
+    for(var value of event.target.elements) { 
+        if(value.value != "") {
+            var section = value.getAttribute("section");
+            var setting = value.getAttribute("setting");
+            
+            if(!(section in data)) {
+                data[section] = {};
+            }
+            data[section][setting] = value.value;
+        }
+    }
+
+    fetch("{{ url_for('update_config') }}", {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status == "success") {
+            window.location.replace("{{ url_for('dashboard_view') }}");
+        }
+    })
+    .catch(reason => {
+        alert("An error occurred: " + reason);
+    });
+}); #}
+
+function submitEntry(input, icon) {
+    input.toggleAttribute("disabled");
+    var section = input.getAttribute("section");
+    var setting = input.getAttribute("setting");
+    fetch(`{{ url_for('set_config_item') }}?setting=${setting}&section=${section}&value=${input.value}`)
+    .then((response) => {
+        if(!response.ok) {
+            switch(response.status) {
+                case 500: {
+                    flashToast("An internal server error occurred");
+                    break;
+                }
+                case 426: {
+                    flashToast("Request made with HTTP, but HTTPS is required");
+                    break;
+                }
+                default: {
+                    flashToast("An unknown error occurred:");
+                    flashToast(response.json().status);
+                }
+            }
+            icon.classList.remove("bi-arrow-clockwise");
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-x");
+        } else {
+            icon.classList.remove("bi-arrow-clockwise");
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-check");
+            input.placeholder = input.value;
+            input.value = "";
+        }
+        input.toggleAttribute("disabled");
+    });
+}
+
+for(var box of document.getElementsByClassName("input-textbox")) {
+    box.addEventListener("dblclick", (event) => {
+        if(event.target.value == "") {
+            event.target.value = event.target.placeholder;
         }
     });
-    navLink.classList.add("active");
-    navLink.classList.remove("text-white");
+
+    let entryCooldown = 2000; // 2 seconds
+    let cooldownTimer;
+    box.addEventListener("input", (event) => {
+        clearTimeout(cooldownTimer);
+
+        icon = event.target.parentElement.getElementsByTagName("i")[0];
+        if(icon.classList.contains("bi-check")) {
+            icon.classList.remove("bi-check");
+        } else if(icon.classList.contains("bi-x")) {
+            icon.classList.remove("bi-x");
+        }
+
+        if(event.target.value.length == 0) {
+            // Empty textbox
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-check");
+            return;
+        }
+
+        icon.classList.add("bi-arrow-clockwise");
+        icon.classList.add("rotating");
+
+        cooldownTimer = setTimeout(submitEntry, entryCooldown, event.target, icon);
+    });
 }
+</script>
+<script type="text/javascript">
+    function getActive() {
+        if(window.location.toString().includes("?")) {
+            var search_url = new URL(window.location);
+            if(!search_url.searchParams.has("section")) {
+                // No parameter named "section"
+                return;
+            }
+
+            var navID = search_url.searchParams.get("section");
+            var navlink = document.getElementById(navID + "-link");
+
+            if(!navlink) {
+                // section was invalid
+                return;
+            }
+            
+            setActive(navlink);
+        }
+    }
+
+    getActive();
 </script>
 </html>

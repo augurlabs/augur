@@ -1,0 +1,26 @@
+<h1>Connection Status</h1>
+<h2>This page will automatically update</h2>
+<p>If a restart was recently requested, it may take several minutes for Augur to finish shutting down.</p>
+<h3 id="status-text"></h3>
+
+<script type="text/javascript">
+    status_text = document.getElementById("status-text");
+
+    async function get_connection_status() {
+        while(true) {
+            fetch("{{ url_for('get_api_version') }}").then(response => {
+                if(!response.ok) {
+                    status_text.innerHTML = "Connection: " + response.statusText;
+                } else {
+                    status_text.innerHTML = "Connection: Successful";
+                }
+            }, rejected => {
+                status_text.innerHTML = "Connection: Unreachable";
+            });
+
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    get_connection_status();
+</script>

@@ -22,7 +22,9 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('user_settings') }}">Profile</a></li>
-                        {# <li><a class="dropdown-item" href="{{ url_for('dashboard_view') }}">Dashboard</a></li> #}
+                        {% if current_user.admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard_view') }}">Dashboard</a></li>
+                        {% endif %}
                         <li><a class="dropdown-item" href="{{ url_for('user_logout') }}">Logout</a></li>
                     </ul>
                 </li>
