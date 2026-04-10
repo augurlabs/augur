@@ -4,7 +4,7 @@ from datetime import timedelta, timezone
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException, ResourceGoneException
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
@@ -124,8 +124,8 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         try:
             messages = list(github_data_access.paginate_resource(comment_url))
             all_data += messages
-        except UrlNotFoundException:
-            logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
+        except (UrlNotFoundException, ResourceGoneException) as e:
+            logger.info(f"{task_name}: Skipping {comment_url}: {e}")
             skipped_urls += 1
 
         if len(all_data) >= message_batch_size:
