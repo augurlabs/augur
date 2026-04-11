@@ -4,6 +4,7 @@ import subprocess
 import psutil
 import signal
 from urllib.parse import urlparse
+import sqlalchemy as s
 
 from augur.tasks.init.redis_connection import get_redis_connection
 
@@ -70,3 +71,20 @@ def raise_open_file_limit(num_files):
     resource.setrlimit(resource.RLIMIT_NOFILE, (num_files, current_hard))
 
     return
+
+def get_db_version(engine):
+    """ a helper function to return the database version
+    used in print_db_version and upgrade_db_version in the db cli module
+    """
+    
+    db_version_sql = s.sql.text(
+        """
+        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+        """
+    )
+
+    with engine.connect() as connection:
+        result = int(connection.execute(db_version_sql).fetchone()[2])
+
+    engine.dispose()
+    return result

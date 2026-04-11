@@ -93,7 +93,8 @@ default_config = {
                 "ml_collection_interval_days": 40,
                 "default_batch_size": 1000,
                 "github_event_batch_size": 500,
-                "github_message_batch_size": 20
+                "github_message_batch_size": 20,
+                "automatic_self_recover": 0
             },
             "Message_Insights": {
                     "insight_days": 30,
