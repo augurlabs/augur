@@ -196,13 +196,8 @@ def insert_facade_contributors(self, repo_git):
     repo_id = repo.repo_id
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
-        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
-        collection_status = execute_session_query(query,'one')
-        last_collected_date = collection_status.facade_data_last_collected if not facade_helper.facade_contributor_full_recollect else None
-
-    # Get all of the commit data's emails and names from the commit table that do not appear
-    # in the contributors table or the contributors_aliases table.
+    # Find commits not yet linked to a contributor (cmt_ght_author_id IS NULL),
+    # skipping emails already marked unresolvable.
 
     logger.info(
     "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
@@ -212,7 +207,7 @@ def insert_facade_contributors(self, repo_git):
             commits.cmt_commit_hash AS hash,
             commits.cmt_author_raw_email AS email_raw
         FROM
-            commits
+            augur_data.commits
         WHERE
             commits.repo_id = :repo_id AND
             commits.cmt_ght_author_id IS NULL AND
@@ -254,8 +249,7 @@ def insert_facade_contributors(self, repo_git):
 
     logger.debug("DEBUG: Got through the new_contribs")
     
-    # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
-    # i.e., if a contributor already exists, we use it!
+    # Match unlinked commits to contributors via email from any source (cntrb_email, canonical email, or alias).
     resolve_email_to_cntrb_id_sql = s.sql.text("""
         WITH email_to_contributor AS (
             SELECT cntrb_email AS email, cntrb_id

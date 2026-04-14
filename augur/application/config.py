@@ -55,7 +55,6 @@ default_config = {
                 "rebuild_caches": 1,
                 "run_analysis": 1,
                 "run_facade_contributors": 1,
-                "facade_contributor_full_recollect": 0,
                 "commit_messages": 1,
             },
             "Server": {
