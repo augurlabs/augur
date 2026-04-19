@@ -33,14 +33,14 @@ def test_connection(function_internet_connection):
                 print(traceback.format_exc())
 
             if not success:
-                print(
+                raise click.ClickException(
                     f"""
-                    \n\n{usage} command setup failed.
+                    {usage} command setup failed.
                     There was an error while testing for network connectivity
                     Please check your connection to the internet to run Augur
                     Consider setting http_proxy variables for limited access installations."""
                 )
-                sys.exit(-1)
+                
         
         return ctx.invoke(function_internet_connection, *args, **kwargs)
         
