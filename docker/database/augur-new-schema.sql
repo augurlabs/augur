@@ -1488,41 +1488,6 @@ CREATE SEQUENCE augur_data.contributors_history_cntrb_history_id_seq
 
 ALTER SEQUENCE augur_data.contributors_history_cntrb_history_id_seq OWNER TO augur;
 
---
--- Name: dei_badging; Type: TABLE; Schema: augur_data; Owner: augur
---
-
-CREATE TABLE augur_data.dei_badging (
-    id integer NOT NULL,
-    badging_id integer NOT NULL,
-    level character varying NOT NULL,
-    repo_id bigint NOT NULL
-);
-
-
-ALTER TABLE augur_data.dei_badging OWNER TO augur;
-
---
--- Name: dei_badging_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
---
-
-CREATE SEQUENCE augur_data.dei_badging_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE augur_data.dei_badging_id_seq OWNER TO augur;
-
---
--- Name: dei_badging_id_seq; Type: SEQUENCE OWNED BY; Schema: augur_data; Owner: augur
---
-
-ALTER SEQUENCE augur_data.dei_badging_id_seq OWNED BY augur_data.dei_badging.id;
-
 
 --
 -- Name: discourse_insights_msg_discourse_id_seq1; Type: SEQUENCE; Schema: augur_data; Owner: augur
@@ -5742,13 +5707,6 @@ ALTER TABLE ONLY augur_data.chaoss_user ALTER COLUMN chaoss_id SET DEFAULT nextv
 
 
 --
--- Name: dei_badging id; Type: DEFAULT; Schema: augur_data; Owner: augur
---
-
-ALTER TABLE ONLY augur_data.dei_badging ALTER COLUMN id SET DEFAULT nextval('augur_data.dei_badging_id_seq'::regclass);
-
-
---
 -- Name: config id; Type: DEFAULT; Schema: augur_operations; Owner: augur
 --
 
@@ -6455,14 +6413,6 @@ nan	kannayoshihiro@gmail.com	KANNA Yoshihiro	UTMC	2009-04-17 12:43:58	\N	0	0	\N	
 --
 
 COPY augur_data.contributors_aliases (cntrb_alias_id, canonical_email, alias_email, cntrb_active, cntrb_last_modified, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
-\.
-
-
---
--- Data for Name: dei_badging; Type: TABLE DATA; Schema: augur_data; Owner: augur
---
-
-COPY augur_data.dei_badging (id, badging_id, level, repo_id) FROM stdin;
 \.
 
 
@@ -7943,13 +7893,6 @@ SELECT pg_catalog.setval('augur_data.contributors_history_cntrb_history_id_seq',
 
 
 --
--- Name: dei_badging_id_seq; Type: SEQUENCE SET; Schema: augur_data; Owner: augur
---
-
-SELECT pg_catalog.setval('augur_data.dei_badging_id_seq', 1, false);
-
-
---
 -- Name: discourse_insights_msg_discourse_id_seq; Type: SEQUENCE SET; Schema: augur_data; Owner: augur
 --
 
@@ -8676,14 +8619,6 @@ ALTER TABLE ONLY augur_data.contributors
 
 ALTER TABLE ONLY augur_data.contributors_aliases
     ADD CONSTRAINT contributors_aliases_pkey PRIMARY KEY (cntrb_alias_id);
-
-
---
--- Name: dei_badging dei_badging_pkey; Type: CONSTRAINT; Schema: augur_data; Owner: augur
---
-
-ALTER TABLE ONLY augur_data.dei_badging
-    ADD CONSTRAINT dei_badging_pkey PRIMARY KEY (id, repo_id);
 
 
 --
@@ -11333,14 +11268,6 @@ ALTER TABLE ONLY augur_data.repo_insights_records
 
 ALTER TABLE ONLY augur_data.repo_sbom_scans
     ADD CONSTRAINT repo_linker_sbom FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: dei_badging user_repo_user_id_fkey; Type: FK CONSTRAINT; Schema: augur_data; Owner: augur
---
-
-ALTER TABLE ONLY augur_data.dei_badging
-    ADD CONSTRAINT user_repo_user_id_fkey FOREIGN KEY (repo_id) REFERENCES augur_data.repo(repo_id);
 
 
 --

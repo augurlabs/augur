@@ -110,8 +110,7 @@ from augur.application.db.models.augur_operations import (
     Subscription,
     SubscriptionType,
     RefreshToken,
-    CollectionStatus,
-    BadgingDEI
+    CollectionStatus
 )
 
 DEFAULT_REPO_GROUP_IDS = [1, 10]
