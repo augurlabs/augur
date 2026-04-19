@@ -1,6 +1,11 @@
 Augur Documentation
 ==================================
 
+As of April 15, 2026, we recommend exploring Augur's successor, `Aveloxis <https://github.com/aveloxis/aveloxis>`_. 
+Aveloxis is a next-generation tool, written in Go, with a test first programming philosophy, and a rigorous data collection testing cycle that ensures complete, fast, robust data collection. 
+Aveloxis closed 80%+ of Augur's open issues on day one, and our present benchmarks indicate its overall data collection is approximately 10x faster than Augur's. 
+
+
 :doc:`Welcome! <getting-started/Welcome>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
