@@ -4,7 +4,8 @@ from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_parser import pa
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_parser import parse_package_json
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_libyear_utils import get_NPM_data, get_npm_release_date, get_npm_latest_version,get_npm_current_version
-
+import logging
+logger=logging.getLogger(__name__)
 #Files That would be parsed should be added here
 file_list = [
     'Requirement.txt',
@@ -95,7 +96,7 @@ def get_libyear(current_version, current_release_date, latest_version, latest_re
     latest_release_date = dateutil.parser.parse(latest_release_date)    
 
     libdays = (latest_release_date - current_release_date).days
-    print(libdays)
+    logger.info(libdays)
     libyear = libdays/365
     return libyear
 

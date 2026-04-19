@@ -3,7 +3,9 @@ import dateutil.parser
 # from packaging import version
 from distutils.version import LooseVersion
 import re 
+import logging
 
+logger=logging.getLogger(__name__)
 
 def get_pypi_data(name, version=None):
     """return a dictionary with pypi project data"""
@@ -68,7 +70,7 @@ def get_latest_version(data):
     return data['info']['version']
 
 
-def get_release_date(data, version,logger):
+def get_release_date(data, version, logger):
     if not data:
         logger.info('invalid data')
         return None
@@ -117,6 +119,6 @@ def get_libyear(current_version, current_release_date, latest_version, latest_re
     latest_release_date = dateutil.parser.parse(latest_release_date)    
 
     libdays = (latest_release_date - current_release_date).days
-    print(libdays)
+    logger.info(f"Library days difference: {libdays} days between current release ({current_release_date}) and latest release ({latest_release_date})")
     libyear = libdays/365
     return libyear
