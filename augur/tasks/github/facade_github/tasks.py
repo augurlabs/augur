@@ -11,7 +11,7 @@ from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 from augur.application.db.lib import bulk_insert_dicts
 from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
-
+from augur.tasks.github.util.util import sanity_check_email
 
 
 
@@ -59,7 +59,31 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         #     logger.debug("Failed local login lookup")
         # else:
         #     login = contributors_with_matching_name[0].gh_login
-        
+
+    
+        # Here we attempt to detect and parse the user id from the email address directly
+        # this is helpful in case the contributor uses a github noreply address for commits.
+
+        # to do this we should first do some sanity checks on the email
+        email_check = sanity_check_email(email)
+        if email_check is not None and 'users.noreply.github.com' in email_check:
+            # we have a noreply address
+
+            # the email check explicitly looks for presence of an @ sign
+            email_user = email_check.split("@")[0]
+            if '+' in email_user:
+                username_parts = email_user.split("+")
+                user_id, login = username_parts[0], username_parts[-1]
+            else:
+                user_id = email_user
+
+            if not user_id.isnumeric():
+                logger.warning(
+                    f"Something went wrong parsing user id '{user_id}` from github noreply user {login} <{email_check}>. "
+                    f"Falling back to regular lookup process"
+                )
+                login = None
+                user_id = None
 
         # Try to get the login from the commit sha
         if login == None or login == "":
@@ -72,19 +96,8 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
     
         if login == None or login == "":
             logger.error("Failed to get login from supplemental data!")
-
-            unresolved = {
-                "email": email,
-                "name": name,
-            }
-            logger.debug(f"No more username resolution methods available. Inserting data into unresolved table: {unresolved}")
-
-            try:
-                unresolved_natural_keys = ['email']
-                bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
-            except Exception as e:
-                logger.error(
-                    f"Could not create new unresolved email {email}. Error: {e}")
+            mark_unresolved(name, email, logger)
+            
             # move on to the next contributor
             continue
 
@@ -95,6 +108,21 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         except UrlNotFoundException as e:
             logger.warning(f"User of {login} not found on github. Skipping...")
             continue
+
+        # if we had a noreply address and there wasnt an issue parsing a numeric user ID,
+        # return now that we have the user record to validate that the profile we fetched for the username
+        #  does indeed match the correct user
+        if email_check is not None and 'users.noreply.github.com' in email_check and user_id is not None:
+            gh_user_src_id = user_data.get("id")
+            
+            if gh_user_src_id != int(user_id):
+                logger.warning(
+                    f"github noreply user src id {gh_user_src_id} doesn't match the ID from their github noreply email: {email_check}."
+                    "Marking as unresolved and skipping to avoid inserting mismatched data."
+                )
+                mark_unresolved(name, email, logger)
+                continue
+
 
         # Use the email found in the commit data if api data is NULL
         emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
@@ -155,6 +183,22 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
     
         
     return
+
+
+def mark_unresolved(name, email, logger):
+    unresolved = {
+        "email": email,
+        "name": name,
+    }
+    logger.debug(f"No more username resolution methods available. Inserting data into unresolved table: {unresolved}")
+
+    try:
+        unresolved_natural_keys = ['email']
+        bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+    except Exception as e:
+        logger.error(
+            f"Could not create new unresolved email {email}. Error: {e}")
+
 
 
 def link_commits_to_contributor(logger, facade_helper, contributorQueue):
