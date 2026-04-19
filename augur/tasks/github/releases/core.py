@@ -168,8 +168,16 @@ def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
     logger.info("Hitting endpoint: {} ...\n".format(url))
     data = request_graphql_dict(key_auth,logger, url, query)
 
+    if data is None:
+        logger.warning(f"GraphQL returned None for repo {github_url}; skipping releases.")
+        return None
+
     if 'data' in data:
         data = data['data']['repository']
+
+    if data is None:
+        logger.warning(f"GraphQL repository node is None for repo {github_url}; skipping releases.")
+        return None
 
     data['owner'] = owner
 
@@ -181,6 +189,9 @@ def releases_model(session, key_auth, logger, repo_git, repo_id):
         data = fetch_data(key_auth, logger, repo_git, repo_id)
     except Exception as e:
         logger.info(f"Ran into problem when fetching data for repo {repo_git}: {e}")
+        return
+
+    if data is None:
         return
 
     #logger.info("repository value is: {}\n".format(data))
@@ -196,6 +207,8 @@ def releases_model(session, key_auth, logger, repo_git, repo_id):
         elif 'edges' in data['releases'] and not data['releases']['edges']:
             logger.info("Searching for tags instead of releases...")
             data = fetch_data(key_auth, logger, repo_git, repo_id,True)
+            if data is None:
+                return
             logger.info("refs value is: {}\n".format(data))
             if 'refs' in data:
                 if 'edges' in data['refs']:
