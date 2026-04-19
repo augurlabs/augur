@@ -1,7 +1,9 @@
 :root {
     --color-bg: #1A233A;
     --color-bg-light: #272E48;
+    --color-bg-contrast: #646683;
     --color-fg: white;
+    --color-fg-dark: #b0bdd6;
     --color-fg-contrast: black;
     --color-accent: #6f42c1;
     --color-accent-dark: #6134b3;
@@ -25,7 +27,35 @@ body {
     margin-bottom: 10px;
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+.input-textbox {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-group-text {
+    color: var(--color-fg);
+    background-color: var(--color-bg-light);
+    border-color: var(--color-accent-dark);
+    border-right: none;
+}
+
+.input-textbox::placeholder {
+    color: var(--color-fg-dark);
+}
+
+.input-textbox:focus {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-textbox:focus::placeholder {
+    color: var(--color-fg-dark);
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
     background-color: var(--color-accent)
 }
 
@@ -52,6 +82,10 @@ body {
     padding-right: 10px !important;
 }
 
+.modal-dialog {
+    color: var(--color-fg-contrast);
+}
+
 .dashboard-form-control {
     border: 1px solid #596280;
     -webkit-border-radius: 2px;
@@ -62,17 +96,59 @@ body {
     color: #bcd0f7;
 }
 
+.contrast-card {
+    background-color: var(--color-bg);
+}
+
+.card:has(.contrast-card) {
+    border: none;
+}
+
+.accordion-item {
+    background-color: var(--color-bg-light);
+    color: var(--color-fg);
+}
+
+.accordion-button {
+    background-color: var(--color-accent-dark);
+    color: var(--color-fg);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--color-accent);
+    color: var(--color-fg);
+}
+
+.accordion-button::after {
+    filter: saturate(0%) brightness(10);
+}
+
+.accordion-button:not(.collapsed)::after {
+    filter: saturate(0%) brightness(10);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: var(--color-accent-dark);
+}
+
 .circle-opaque {
-    border-radius: 50%;          /* Make it a circle */
-    display: inline-block;       
-    position: absolute;          /* Able to position it, overlaying the other image */
-    left:0px;                    /* Customise the position, but make sure it */
-    top:0px;                     /* is the same as .circle-transparent */
-    z-index: -1;                 /* Makes the image sit *behind* .circle-transparent */
+    border-radius: 50%;
+    /* Make it a circle */
+    display: inline-block;
+    position: absolute;
+    /* Able to position it, overlaying the other image */
+    left: 0px;
+    /* Customise the position, but make sure it */
+    top: 0px;
+    /* is the same as .circle-transparent */
+    z-index: -1;
+    /* Makes the image sit *behind* .circle-transparent */
 }
 
 .circle-opaque img {
-    border-radius: 50%;          /* Make it a circle */
+    border-radius: 50%;
+    /* Make it a circle */
     z-index: -1;
 }
 
@@ -95,4 +171,47 @@ table {
 #toast-placeholder {
     display: none;
     z-index: 100;
+}
+
+@-webkit-keyframes rotating
+
+/* Safari and Chrome */
+    {
+    from {
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotating {
+    from {
+        -ms-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -ms-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -webkit-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    -webkit-animation: rotating 1s linear infinite;
+    -moz-animation: rotating 1s linear infinite;
+    -ms-animation: rotating 1s linear infinite;
+    -o-animation: rotating 1s linear infinite;
+    animation: rotating 1s linear infinite;
 }
