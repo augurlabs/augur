@@ -74,7 +74,7 @@ services:
       - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
       - REDIS_CONN_STRING=redis://redis:6379
       - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-augur_vhost}
-      - CONFIG_LOCATION=/config/config.yml
+
       - CONFIG_DATADIR=/config
       - CACHE_DATADIR=/cache
       - CACHE_LOCKDIR=/cache

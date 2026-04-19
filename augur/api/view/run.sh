@@ -1,4 +1,4 @@
-export CONFIG_LOCATION="config.yml"
+export CONFIG_DATADIR="."
 export SERVER_ADDRESS="0.0.0.0"
 export SERVER_PORT="8000"
 

@@ -6,8 +6,13 @@ import secrets, yaml
 
 env = Environment()
 
-# load configuration files and initialize globals
-configFile = Path(env.setdefault("CONFIG_LOCATION", "config.yml"))
+config_location = os.getenv("CONFIG_LOCATION")
+if config_location:
+    configFile = Path(config_location)
+elif os.getenv("CONFIG_DATADIR"):
+    configFile = Path(os.getenv("CONFIG_DATADIR")) / "config.yml"
+else:
+    configFile = Path("config.yml")
 
 settings = {}
 
