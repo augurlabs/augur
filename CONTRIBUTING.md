@@ -72,7 +72,48 @@ $ git commit -s -m “my commit message w/signoff”
 
 To ensure all your commits are signed, you may choose to [configure git](https://gist.github.com/xavierfoucrier/c156027fcc6ae23bcee1204199f177da) properly by editing your global ```.gitconfig```
 
-**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
+**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.**
+
+## Contribution Guidelines
+
+These apply to all contributions, AI-assisted or not.
+
+- **Discuss first, then code.** Open or comment on an issue before submitting a PR. This avoids wasted effort on both sides.
+- **Read your own work.** If you're not willing to read what you're submitting, don't expect someone else to. Review your changes before requesting review.
+- **Engage directly with reviewers.** When a maintainer gives feedback, respond with your own understanding. Maintainer feedback is a directive — engage with it seriously, don't treat it as a suggestion to relay elsewhere.
+- **Start small.** Especially for new contributors — submit changes you fully understand, get feedback, iterate.
+
+## Generative AI Policy
+
+Use whatever tools you want, but there must be a human in the loop. **You are the author, and you are accountable for the result.**
+
+### Your Responsibility
+
+1. **Review your own work.** Read and test all AI-generated code or text before submitting. If you can't explain why a change works, it's not ready for review. If your changes are too long for you to read, they're too long for maintainers to read.
+
+2. **Disclose AI use.** Complete the AI disclosure section in the PR template. If no AI was used, check the "No generative AI" box — that's a valid answer, and it helps us distinguish from incomplete templates.
+
+3. **Engage with reviewers as yourself.** Passing maintainer feedback to an LLM and relaying the output back doesn't help anyone grow and doesn't sustain our community. Respond with your own understanding.
+
+### Why we ask
+
+Citing your sources is the difference between plagiarism and reusing/adapting ideas. You should cite the tools you use, whether that is Stack Overflow or an AI tool. It builds trust with reviewers and helps us as a CHAOSS project understand how AI tools are used in our own community.
+
+### What counts as generative AI
+
+This policy covers generative AI tools, especially (but not only) when used for contributing code, issues, PR comments, and documentation. Non-generative tools like spell check, grammar correction, syntax highlighting, and basic/deterministic IDE autocomplete are not in scope.
+
+**Examples:** Claude Code, ChatGPT, GitHub Copilot, Cursor, Codex, Gemini, and similar tools that generate, write, or test code or text on your behalf.
+
+### Copyright
+
+You are responsible for ensuring you have the right to contribute code under our license. AI tools can reproduce copyrighted material, and using an AI to generate it doesn't remove the copyright. Contributions found to contain improperly licensed material will be removed.
+
+### Enforcement
+
+This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked. All contributions, whether AI-assisted or not, are expected to meet the same quality standards. Patterns of submitting large, unreviewed, or unfocused contributions that repeatedly waste maintainer time may be addressed through the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), which states:
+
+> Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
 
 ## Keeping in sync with the Augur Repository
 
