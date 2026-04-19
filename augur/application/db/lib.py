@@ -1,17 +1,18 @@
-import re
 import time
 import random
 import logging
 import sqlalchemy as s
-from sqlalchemy import func 
-from sqlalchemy.exc import DataError
+from sqlalchemy import func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
 from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
+# TODO: CollectionState should be moved to augur/application/db/ to eliminate
+# this cross-layer dependency — same issue as the correction.py import above.
 from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.timestamp_utils import correct_timestamp
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query, convert_type_of_value
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
@@ -160,7 +161,7 @@ def get_working_commits_by_repo_id(repo_id):
 
     try:
         working_commits = fetchall_data_from_sql_text(query)
-    except:
+    except Exception:
         working_commits = []
 
     return working_commits
@@ -176,7 +177,7 @@ def get_missing_commit_message_hashes(repo_id):
 
     try:
         missing_commit_hashes = fetchall_data_from_sql_text(fetch_missing_hashes_sql)
-    except:
+    except Exception:
         missing_commit_hashes = []
     
     return missing_commit_hashes
@@ -217,46 +218,30 @@ def facade_bulk_insert_commits(logger, records):
                 facade_bulk_insert_commits(logger, firsthalfRecords)
                 facade_bulk_insert_commits(logger, secondhalfRecords)
             elif len(records) == 1:
+                # Binary search isolated the problematic record
+                # Try to fix invalid timestamps (rare but possible from git corruption)
                 commit_record = records[0]
-                #replace incomprehensible dates with epoch.
-                #2021-10-11 11:57:46 -0500
-                
-                # placeholder_date = "1970-01-01 00:00:15 -0500"
-                placeholder_date = commit_record['cmt_author_timestamp']
 
-                postgres_valid_timezones = {
-                    -1200, -1100, -1000, -930, -900, -800, -700,
-                    -600, -500, -400, -300, -230, -200, -100, 000,
-                    100, 200, 300, 330, 400, 430, 500, 530, 545, 600,
-                    630, 700, 800, 845, 900, 930, 1000, 1030, 1100, 1200,
-                    1245, 1300, 1400
-                }
-                
-                # Reconstruct timezone portion of the date string to UTC
-                placeholder_date_segments = re.split(" ", placeholder_date)
-                tzdata = placeholder_date_segments.pop()
+                # Correct both author and committer timestamps
+                author_corrected = correct_timestamp(
+                    commit_record.get('cmt_author_timestamp', ''),
+                    fallback=None,
+                    logger=logger
+                )
+                committer_corrected = correct_timestamp(
+                    commit_record.get('cmt_committer_timestamp', ''),
+                    fallback=author_corrected,
+                    logger=logger
+                )
 
-                if ":" in tzdata:
-                    tzdata = tzdata.replace(":", "")
+                commit_record['cmt_author_timestamp'] = author_corrected
+                commit_record['cmt_committer_timestamp'] = committer_corrected
 
-                if int(tzdata) not in postgres_valid_timezones:
-                    tzdata = "+0000"
-                else:
-                    raise e
+                logger.warning(
+                    f"Corrected invalid timestamp(s) for commit {commit_record.get('cmt_commit_hash')}"
+                )
 
-                placeholder_date_segments.append(tzdata)
-
-                placeholder_date = " ".join(placeholder_date_segments)
-
-                #Check for improper utc timezone offset
-                #UTC timezone offset should be between -14:00 and +14:00
-
-                # analyzecommit.generate_commit_record() defines the keys on the commit_record dictionary
-                commit_record['cmt_author_timestamp'] = placeholder_date
-                commit_record['cmt_committer_timestamp'] = placeholder_date
-                
-                logger.warning(f"commit with invalid timezone set to UTC: {commit_record['cmt_commit_hash']}")
-
+                # Retry insert with corrected timestamps
                 session.execute(
                     s.insert(Commit),
                     [commit_record],
