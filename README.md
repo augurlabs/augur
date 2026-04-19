@@ -24,10 +24,8 @@ Augur’s main focus is to measure the overall health and sustainability of open
 For example, one of our metrics is *burstiness*. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project? 
 This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. 
 
-We are a [CHAOSS](https://chaoss.community) project, and many of our
-metrics are implementations of the metrics defined by our awesome community. You can find a full list of them [here](https://chaoss.community/metrics/).
-
-For more information on [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
+The creators of Augur, Sean Goggins and Derek Howard, are co-founders of the [CHAOSS](https://chaoss.community) project, and many of our
+metrics are implementations of the metrics defined by our awesome community. 
 
 ## Collecting Data
 
