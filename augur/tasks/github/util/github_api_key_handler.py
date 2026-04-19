@@ -92,13 +92,15 @@ class GithubApiKeyHandler():
         if redis_keys:
             return redis_keys
 
+        # Initialize keys to empty list to prevent NameError if all retries fail
+        keys = []
         attempts = 0
         while attempts < 3:
-
             try:
                 keys = self.get_api_keys_from_database()
                 break
-            except:
+            except Exception as e:
+                self.logger.warning(f"Failed to get API keys from database (attempt {attempts + 1}/3): {e}")
                 time.sleep(5)
                 attempts += 1
 
@@ -132,16 +134,6 @@ class GithubApiKeyHandler():
             raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
 
 
-        # shuffling the keys so not all processes get the same keys in the same order
-        valid_now = valid_keys
-        #try: 
-            #self.logger.info(f'valid keys before shuffle: {valid_keys}')
-            #valid_keys = random.sample(valid_keys, len(valid_keys))
-            #self.logger.info(f'valid keys AFTER shuffle: {valid_keys}')
-        #except Exception as e: 
-         #   self.logger.debug(f'{e}')
-         #   valid_keys = valid_now
-         #   pass 
 
         return valid_keys
 
