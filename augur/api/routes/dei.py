@@ -54,10 +54,7 @@ def dei_track_repo(application: ClientApplication):
 
         record = {
             "repo_id": repo_id,
-            "issue_pr_sum": pr_issue_count,
-            "core_weight": -9223372036854775808,
-            "secondary_weight": -9223372036854775808,
-            "ml_weight": -9223372036854775808
+            "issue_pr_sum": pr_issue_count
         }
 
         collection_status_unique = ["repo_id"]

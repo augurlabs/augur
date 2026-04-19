@@ -7,7 +7,6 @@ import httpx
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.application.db.lib import get_repo_by_repo_git
-from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
 def get_repo_src_id(owner, repo, logger):
     
@@ -109,23 +108,3 @@ def get_repo_weight_by_issue(logger,repo_git):
     number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
     return number_of_issues_and_prs
-
-#Get the weight for each repo for the core collection hook
-def get_repo_weight_core(logger,repo_git):
-    
-    repo = get_repo_by_repo_git(repo_git)
-
-    if not repo:
-        raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
-    
-    #try to get the collection status if it exists at this point
-    try:
-        status = repo.collection_status[0]
-        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
-    except IndexError:
-        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,None)
-
-
-    #Don't go below zero.
-    return max(0,get_repo_weight_by_issue(logger, repo_git) - time_factor)
-

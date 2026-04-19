@@ -26,6 +26,7 @@ Aveloxis closed 80%+ of Augur's open issues on day one, and our present benchmar
    schema/toc
    login
    procedures/toc
+   history/index
 .. 
 
 ..
