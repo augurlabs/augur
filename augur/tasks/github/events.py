@@ -167,7 +167,10 @@ class BulkGithubEventCollection(GithubEventCollection):
         self._process_issue_events(issue_events, repo_id)
         self._process_pr_events(pr_events, repo_id)
 
-        update_issue_closed_cntrbs_by_repo_id(repo_id)
+        try:
+            update_issue_closed_cntrbs_by_repo_id(repo_id)
+        except Exception as e:
+            self._logger.error(f"{self.repo_identifier} - {self.task_name}: Failed to update issue closed contributors: {e}")
 
     def _process_issue_events(self, issue_events, repo_id):
         
@@ -284,7 +287,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         engine = get_engine()
 
-        with engine.connect() as connection:
+        with engine.begin() as connection:
 
             if since:
                 # TODO: Remove src id if it ends up not being needed
@@ -349,7 +352,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         engine = get_engine()
 
-        with engine.connect() as connection:
+        with engine.begin() as connection:
 
             if since:
                 query = text(f"""
