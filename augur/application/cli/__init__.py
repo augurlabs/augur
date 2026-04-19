@@ -10,6 +10,7 @@ import traceback
 
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db import get_engine, dispose_database_engine
+from augur.application.config import ConfigPaths
 from sqlalchemy.exc import OperationalError 
 
 
@@ -63,9 +64,9 @@ def test_db_connection(function_db_connection):
             if augur_db_environment_var:
                 location = f"the AUGUR_DB environment variable\nAUGUR_DB={os.getenv('AUGUR_DB')}"
             else:
-                with open("db.config.json", 'r') as f:
-                    db_config = json.load(f)
-                    location = f"db.config.json\nYour db.config.json is: {db_config}"
+                db_config_path = ConfigPaths.db_config()
+                db_config = ConfigPaths.read_db_config()
+                location = f"{db_config_path}\nYour db.config.json is: {db_config}"
             
             incorrect_values = "host name is" 
             #  determine which value in the database string is causing the error
