@@ -498,7 +498,7 @@ def run_psql_command_in_database(target_type, target):
             database_name = db_config["database_name"]
 
             db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
-            engine = s.create_engine(db_conn_string)
+            engine = s.create_engine(db_conn_string, connect_args={"application_name": f"augur cli"})
 
     check_call(
         [
