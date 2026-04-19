@@ -74,6 +74,43 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
+### Fixing Unsigned Commits
+
+If you've already made commits without signing them off, don't worry! Here's how to fix them:
+
+#### If you have only ONE unsigned commit (the most recent one):
+```bash
+$ git commit --amend -s --no-edit
+$ git push --force-with-lease
+```
+
+#### If you have MULTIPLE unsigned commits:
+Use interactive rebase to sign all commits. Replace `N` with the number of commits to fix:
+```bash
+$ git rebase -i HEAD~N --signoff
+```
+In the editor that opens, you don't need to change anything - just save and close. Git will automatically add the sign-off to each commit. Then force push:
+```bash
+$ git push --force-with-lease
+```
+
+#### If ALL your commits on the branch are unsigned:
+Rebase from the point where your branch diverged from main:
+```bash
+$ git rebase -i main --signoff
+$ git push --force-with-lease
+```
+
+> **Note:** Using `--force-with-lease` is safer than `--force` as it prevents overwriting others' work if the remote has changed.
+
+### Verifying Your Commits Are Signed
+
+To check if your commits have sign-offs:
+```bash
+$ git log --show-signature -3
+```
+Look for the `Signed-off-by:` line in each commit message.
+
 ## Keeping in sync with the Augur Repository
 
 Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
