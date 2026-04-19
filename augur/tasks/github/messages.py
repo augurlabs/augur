@@ -16,7 +16,7 @@ from sqlalchemy.sql import text
 
 
 platform_id = 1
-
+MESSAGE_BATCH_SIZE = 200
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
@@ -39,17 +39,30 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
             core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
         
+        # Build mappings once before processing any messages
+        # create mapping from issue url to issue id of current issues
+        issue_url_to_id_map = {}
+        issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+        for issue in issues:
+            issue_url_to_id_map[issue.issue_url] = issue.issue_id
+
+        # create mapping from pr url to pr id of current pull requests
+        pr_issue_url_to_id_map = {}
+        prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+        for pr in prs:
+            pr_issue_url_to_id_map[pr.pr_issue_url] = pr.pull_request_id
+
         if is_repo_small(repo_id):
             message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
             
             if message_data:
-                process_messages(message_data, task_name, repo_id, logger, augur_db)
+                process_messages(message_data, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map)
 
             else:
                 logger.info(f"{owner}/{repo} has no messages")
 
         else:
-            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected)
+            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected, issue_url_to_id_map, pr_issue_url_to_id_map)
 
 
 def is_repo_small(repo_id):
@@ -82,7 +95,7 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     return list(github_data_access.paginate_resource(url))
 
 
-def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db, since) -> None:
+def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db, since, issue_url_to_id_map, pr_issue_url_to_id_map) -> None:
 
     message_batch_size = get_batch_size("message")
 
@@ -133,12 +146,12 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
             all_data.clear()
 
     if len(all_data) > 0:
-        process_messages(all_data, task_name, repo_id, logger, augur_db)
+        process_messages(all_data, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map)
 
     logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
         
 
-def process_messages(messages, task_name, repo_id, logger, augur_db):
+def process_messages(messages, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map):
 
     tool_version = "2.0"
     data_source = "Github API"
@@ -153,18 +166,6 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
     if len(messages) == 0:
         logger.info(f"{task_name}: No messages to process")
-
-    # create mapping from issue url to issue id of current issues
-    issue_url_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
-    for issue in issues:
-        issue_url_to_id_map[issue.issue_url] = issue.issue_id
-
-    # create mapping from pr url to pr id of current pull requests
-    pr_issue_url_to_id_map = {}
-    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
-    for pr in prs:
-        pr_issue_url_to_id_map[pr.pr_issue_url] = pr.pull_request_id
 
 
     message_len = len(messages)
