@@ -1,12 +1,11 @@
-#SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MIT
 """
 Runs Augur with Gunicorn when called
 """
-
+import sys
 import os
 import click
 import importlib
-import traceback
 
 from pathlib import Path
 # import augur.application
@@ -31,15 +30,21 @@ class AugurMultiCommand(click.MultiCommand):
         # Check that the command exists before importing
         if not cmdfile.is_file():
             return
-
+        # Top-level help: do not import any command modules    
+        if "-h" in sys.argv or "--help" in sys.argv:
+            return click.Command(name=name)
         # Prefer to raise exception instead of silcencing it
-        module = importlib.import_module('.' + name, 'augur.application.cli')
+        module = importlib.import_module("." + name, "augur.application.cli")
         return module.cli
 
 @click.command(cls=AugurMultiCommand, context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def run(ctx):
     """
-    Augur is an application for open source community health analytics
+       Augur is an application for open source community health analytics.
+
+    Note: When no database configuration is detected, the top-level help
+    output is intentionally limited and does not include per-command
+    summaries. See issue #3654 for details.
     """
     return ctx
