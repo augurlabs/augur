@@ -87,7 +87,14 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
         with get_session() as session:
             logger.info(f"Repo git: {repo_git}")
-            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one_or_none()
+
+            if repo is None:
+                logger.warning(
+                    f"Repo with git url {repo_git} not found during failure handling "
+                    f"(it may have been renamed); skipping status update."
+                )
+                return
 
             repoStatus = repo.collection_status[0]
 
