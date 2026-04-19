@@ -21,7 +21,7 @@ def test_connection(function_internet_connection):
         with httpx.Client() as client:
             try:
                 _ = client.request(
-                    method="GET", url="http://chaoss.community", timeout=10, follow_redirects=True)
+                    method="GET", url="http://aveloxis.io", timeout=10, follow_redirects=True)
                 success = True
             except (TimeoutError, httpx.TimeoutException):
                 print("Request timed out.")
