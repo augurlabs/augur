@@ -146,7 +146,10 @@ def clear_rabbitmq_messages(connection_string):
 
     logger.info("Clearing all messages from celery queue in rabbitmq")
     from augur.tasks.init.celery_app import celery_app
-    celery_app.control.purge()
+    try:
+        celery_app.control.purge()
+    except Exception as e:
+        logger.warning(f"Failed to purge celery queue (this is usually benign if the queue doesn't exist yet): {e}")
 
     clear_all_message_queues(connection_string)
     #rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
@@ -162,5 +165,8 @@ def clear_all_message_queues(connection_string):
     parsed = urlparse(connection_string)
 
     for q in queues:
-        curl_cmd = f"curl -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:15672/api/queues/{virtual_host_string}/{q}"
-        subprocess.call(curl_cmd.split(" "),stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Use the hostname from the connection string instead of localhost
+        # to ensure it works in both docker and non-docker environments
+        hostname = parsed.hostname or "localhost"
+        curl_cmd = f"curl -is -u {parsed.username}:{parsed.password} -XDELETE http://{hostname}:15672/api/queues/{virtual_host_string}/{q}"
+        subprocess.call(curl_cmd.split(" "), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
