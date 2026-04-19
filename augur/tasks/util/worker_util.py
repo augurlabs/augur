@@ -41,6 +41,14 @@ def wait_child_tasks(ids_list):
             prereq.wait()
 
 
+def _make_hashable(obj):
+    """Recursively convert unhashable objects (dict, list) to hashable tuples."""
+    if isinstance(obj, (tuple, list)):
+        return tuple(_make_hashable(e) for e in obj)
+    if isinstance(obj, dict):
+        return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
+    return obj
+
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     """Remove duplicate dicts from a list
 
@@ -52,8 +60,16 @@ def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
 
     Note:
         The dicts must be perfectly the same meaning the field and data must be exactly the same to be removed
+        This handles nested unhashable types like dictionaries and lists.
     """
-    return [dict(y) for y in set(tuple(x.items()) for x in data)]
+    seen = set()
+    unique_data = []
+    for d in data:
+        h = _make_hashable(d)
+        if h not in seen:
+            seen.add(h)
+            unique_data.append(d)
+    return unique_data
 
 def remove_duplicates_by_uniques(data, uniques):
 
@@ -67,8 +83,9 @@ def remove_duplicates_by_uniques(data, uniques):
 
     for x in data:
 
-        # creates a key out of the uniques
-        key = "_".join([str(x[unique]) for unique in uniques])
+        # creates a key out of the uniques as a tuple to avoid string collision issues
+        # and handles nested unhashable codes by converting them to hashable tuples
+        key = tuple(_make_hashable(x[unique]) for unique in uniques)
 
         # if a KeyError does not occur then a dict with those values has already been processed
         # if a KeyError occurs a dict with those values has not been found yet
