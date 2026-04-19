@@ -61,7 +61,9 @@ materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
 frontend_tasks = ['augur.tasks.frontend']
 
-tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
+contributor_engagement_tasks = ['augur.tasks.contributors_engagement.worker']
+
+tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks + contributor_engagement_tasks
 
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     tasks += data_analysis_tasks
@@ -158,6 +160,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.frontend.*': {'queue': 'frontend'},
     'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
+    'augur.tasks.contributors_engagement.*': {'queue': 'secondary'},
 }
 
 #Setting to be able to see more detailed states of running tasks
