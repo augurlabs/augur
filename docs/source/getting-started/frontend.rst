@@ -1,11 +1,17 @@
 Augur's Frontend
 =================
 
-To compile Augur's frontend for deployment in a production environment (i.e., behind an nginx server), you must go through the folowing steps
-    1. Run ``uv run augur config init-frontend``.
-    2. Enter Augur's home directory
-    3. Run ``npm install``, and then ``npm run build`` in the frontend directory.
-    4. After that, follow the instructions for configuring Augur behind Nginx.
+In modern versions of Augur, the frontend is automatically served when you start the Augur server. Here's how to access it:
+
+1. **Start the Augur server** (if not already running):
+
+   Run ``uv run augur run`` to start the server.
+
+2. **Access the frontend**:
+   - The frontend is automatically available at ``http://localhost:5002`` by default
+   - You can also access it through the main Augur server at ``http://localhost:5000`` (it will redirect to the frontend)
+
+For production deployment behind a web server like nginx, you can configure your web server to proxy requests to the frontend service running on port 5002.
 
 Augur's frontend source code can be found at ``<root_augur_directory>/frontend/src/``. It uses Vue.js as its primary architecture framework, and Vega/Vega-Lite for its visualizations. It's configured via the ``frontend.config.json`` file in ``<root_augur_directory>/frontend/``.
 
