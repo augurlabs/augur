@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/net v0.53.0
 	golang.org/x/oauth2 v0.36.0
