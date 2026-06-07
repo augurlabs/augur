@@ -254,7 +254,7 @@ func collectCmd(cfgPath *string) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&full, "full", false, "full historical collection")
-	cmd.Flags().BoolVar(&useAugurKeys, "augur-keys", false, "load API keys from Augur's worker_oauth table")
+	cmd.Flags().BoolVar(&useAugurKeys, "augur-keys", false, "load API keys from Augur's augur_operations.worker_oauth table")
 
 	return cmd
 }
