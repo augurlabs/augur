@@ -10,7 +10,6 @@ extensions = [
     'myst_parser',
     'sphinx_rtd_theme',
 ]
-myst_enable_extensions = ["html_image"]
 
 # Support both .rst and .md files
 source_suffix = {
@@ -30,5 +29,6 @@ myst_enable_extensions = [
     'deflist',
     'fieldlist',
     'tasklist',
+    'html_image',
 ]
 myst_heading_anchors = 3
