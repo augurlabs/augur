@@ -10,6 +10,7 @@ extensions = [
     'myst_parser',
     'sphinx_rtd_theme',
 ]
+myst_enable_extensions = ["html_image"]
 
 # Support both .rst and .md files
 source_suffix = {
