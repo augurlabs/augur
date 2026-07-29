@@ -12,6 +12,8 @@ community or Augur team. </span>
 
 <span class="c1"></span>
 
+<span class="c1">Though we made many attempts to speak with the board and reconcile our concerns, no member of the board spoke with the Augur team. When Augur moved to the CHAOSS github organization the board understood we retained copyright, and could move it back to Augurlabs should governance changes negatively affect the project. </span>
+
 <span class="c1">Augur was a substantial part of the CHAOSS community,
 and that success was a big part of CHAOSS’s success. </span>
 
